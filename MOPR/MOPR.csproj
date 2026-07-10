@@ -1,0 +1,89 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- =====================================================================================
+       MOPR NEW — чистая переработка Modern Optimization Plugin (MOP, Konrad Figura / Athlon)
+       для My Summer Car. Поведение оптимизации сохранено, код написан с нуля и разложен по
+       модулям: Core / Managers / Performance / Fixes / Saves / Rules / Utils / Configuration /
+       Commands / Debug / Interface / Localization. Только MSCLoader, .NET 3.5. GPLv3.
+       ===================================================================================== -->
+
+  <PropertyGroup>
+    <TargetFramework>net35</TargetFramework>
+    <AssemblyName>MOPR</AssemblyName>
+    <RootNamespace>MOPR</RootNamespace>
+    <LangVersion>7.3</LangVersion>
+    <OutputType>Library</OutputType>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <Deterministic>true</Deterministic>
+    <!-- Мод портируется под старый рантайм: глушим предупреждения устаревших API/полей. -->
+    <NoWarn>$(NoWarn);CS0618;CS0612;CS0414;CS0169;CS0649</NoWarn>
+    <!-- Путь к папке Managed игры. Переопределяется через -p:ManagedDir=... -->
+    <ManagedDir Condition=" '$(ManagedDir)' == '' ">D:\SteamLibrary\steamapps\common\My Summer Car\mysummercar_Data\Managed</ManagedDir>
+  </PropertyGroup>
+
+  <!-- .NET 3.5 reference assemblies (offline, restore через NuGet). -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net35" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+
+  <!-- Сборки игры / загрузчика / движка. Никогда не копируются в выход (Private=false). -->
+  <ItemGroup>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(ManagedDir)\Assembly-CSharp.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="MSCLoader">
+      <HintPath>$(ManagedDir)\MSCLoader.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="PlayMaker">
+      <HintPath>$(ManagedDir)\PlayMaker.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="ES2">
+      <HintPath>$(ManagedDir)\ES2.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>$(ManagedDir)\Newtonsoft.Json.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <!-- Harmony 1.x (namespace Harmony, HarmonyInstance) — поставляется с MSCLoader.
+         Нужен для движковых патчей игрового кода (Performance/Engine). Не копируем. -->
+    <Reference Include="0Harmony">
+      <HintPath>$(ManagedDir)\0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(ManagedDir)\UnityEngine.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>$(ManagedDir)\UnityEngine.UI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="System.Drawing" />
+    <!-- Управляемый TLS 1.2 для загрузки правил (старый Mono игры не умеет совр. TLS).
+         В рантайме DLL лежит в папке игры Mods\References, поэтому не копируем. -->
+    <Reference Include="BouncyCastle.Crypto">
+      <HintPath>..\Libs\BouncyCastle.Crypto.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!-- Кадры загрузочного экрана (вшиваются в DLL, грузятся через рефлексию).
+       Папки Images/Libs/Server лежат в корне репозитория, на уровень выше проекта. -->
+  <ItemGroup>
+    <EmbeddedResource Include="..\Images\loadScreen1.png">
+      <LogicalName>MOPR.loadScreen1.png</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\Images\loadScreen2.png">
+      <LogicalName>MOPR.loadScreen2.png</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\Images\icon.png">
+      <LogicalName>MOPR.icon.png</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>

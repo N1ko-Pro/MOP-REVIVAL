@@ -1,0 +1,29 @@
+# ---- .NET / MSBuild (MOPR mod) ----
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+*.userprefs
+.vs/
+
+# ---- NuGet ----
+*.nupkg
+packages/
+
+# ---- Node / Vite (Server) ----
+node_modules/
+dist/
+.vercel/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ---- Environment / secrets ----
+.env
+.env.local
+.env.*.local
+
+# ---- OS / editor ----
+Thumbs.db
+.DS_Store
