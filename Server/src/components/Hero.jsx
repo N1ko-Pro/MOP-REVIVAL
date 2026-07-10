@@ -1,7 +1,6 @@
 import React from 'react';
 import { useI18n } from '../lib/i18n.jsx';
 import { MOP_VERSION } from '../lib/ruleSpec.js';
-import iconUrl from '../assets/icon.png';
 
 export default function Hero() {
   const { t } = useI18n();
@@ -10,10 +9,7 @@ export default function Hero() {
       <div className="hero__inner">
         <p className="hero__eyebrow">{t('hero.eyebrow')}</p>
         <h1 className="hero__title">
-          <img className="hero__icon" src={iconUrl} alt="" aria-hidden="true" />
-          <span className="hero__title-text">
-            MOP <span className="hero__accent">Revival</span>
-          </span>
+          MOP <span className="hero__accent">Revival</span>
         </h1>
         <p className="hero__lead">{t('hero.lead')}</p>
         <div className="hero__cta">
