@@ -1,6 +1,0 @@
-# MOPR_PipelineTest.mopconfig
-# Test rule used to verify the rule-sync pipeline end-to-end.
-# It targets a non-existent object, so it has no effect in-game. Safe to delete.
-min_ver: 4.0.0
-ignore: MOPR_NonExistentTestObject
-toggle: MOPR_NonExistentTestObject object
