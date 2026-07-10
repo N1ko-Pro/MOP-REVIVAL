@@ -10,7 +10,9 @@ export default function Database() {
   const [openId, setOpenId] = useState(null);
 
   useEffect(() => {
-    fetch('manifest.json')
+    // Bypass the browser HTTP cache so the site always shows the current rule
+    // count. The manifest keeps a 5-min Cache-Control for the mod's own sync.
+    fetch('manifest.json', { cache: 'no-store' })
       .then((response) => {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         return response.json();
