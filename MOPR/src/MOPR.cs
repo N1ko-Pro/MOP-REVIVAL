@@ -128,8 +128,7 @@ namespace MOPR
 
             ConsoleCommand.Add(new Commands.MoprCommand());
 
-            if (CompatibilityManager.IsConfilctingModPresent(out string modName))
-                ModUI.ShowMessage("MOPR does not work with <color=yellow>" + modName + "</color>. Please disable that mod first.", "MOPR");
+            CompatibilityManager.ShowConflictWarningIfNeeded();
 
             SaveManager.VerifySave();
 

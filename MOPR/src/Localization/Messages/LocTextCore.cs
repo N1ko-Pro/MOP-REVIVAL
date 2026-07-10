@@ -55,9 +55,9 @@ namespace MOPR.Localization
             { "settings.sector_cull", "Indoor scenery culling" },
             { "settings.sector_cull_hint", "<color=#9AA6B2>Turns off unnecessary scenery objects while indoors.</color>" },
             { "settings.engine_patches", "Engine code patches" },
-            { "settings.engine_patches_hint", "<color=#9AA6B2>Low-level fixes to the game's own code: skips redundant transform updates, caches mouse-hover raycasts per layer, and fixes a slow FSM event loop. Automatically disabled if the Reharmonization mod is installed. Takes effect on the next load.</color>" },
+            { "settings.engine_patches_hint", "<color=#9AA6B2>Low-level fixes to the game's own code: skips redundant transform updates, caches mouse-hover raycasts per layer, and fixes a slow FSM event loop. Takes effect on the next load.</color>" },
             { "settings.sleep_bodies", "Sleep distant physics objects" },
-            { "settings.sleep_bodies_hint", "<color=#9AA6B2>Periodically puts far-away, already-still physics objects to sleep. Disabled automatically if the MSWCOptimization mod is installed.</color>" },
+            { "settings.sleep_bodies_hint", "<color=#9AA6B2>Periodically puts far-away, already-still physics objects to sleep.</color>" },
             { "settings.lod", "Distant models (LOD)" },
             { "settings.lod_hint", "<color=#9AA6B2>Shows cheap stand-in models for far objects.</color>" },
             { "settings.disable_skidmarks", "Hide tire skidmarks" },
@@ -152,6 +152,11 @@ namespace MOPR.Localization
             { "rules.later_msg", "No problem. You can download them anytime from the mod settings: \"Rules server\" → \"Check for rule updates\"." },
             { "rules.downloaded_msg", "Downloaded {0} rule file(s):\n\n{1}\nReload the game for them to take effect." },
 
+            // === Compatibility warning ===
+            { "compat.title", "MOP Revival — Incompatible mod detected" },
+            { "compat.msg", "MOP Revival detected an incompatible mod:\n\n{0}\n\nIt does the same job as MOP Revival, so running both causes conflicts, crashes and broken optimization. Please disable it in your mod loader and restart the game.\n\nMOP Revival stays inactive while it is installed." },
+            { "compat.msg_plural", "MOP Revival detected incompatible mods:\n\n{0}\n\nThey do the same job as MOP Revival, so running them together causes conflicts, crashes and broken optimization. Please disable them in your mod loader and restart the game.\n\nMOP Revival stays inactive while they are installed." },
+
             // === Common ===
             { "common.yes", "Yes" },
             { "common.no", "No" },
@@ -202,9 +207,9 @@ namespace MOPR.Localization
             { "settings.sector_cull", "Отсечение пейзажа в помещениях" },
             { "settings.sector_cull_hint", "<color=#9AA6B2>Отключает лишние объекты пейзажа при нахождении в помещении.</color>" },
             { "settings.engine_patches", "Патчи кода движка" },
-            { "settings.engine_patches_hint", "<color=#9AA6B2>Низкоуровневые правки самого кода игры: пропускает лишние обновления трансформов, кэширует рейкасты наведения мыши по слоям и чинит медленный цикл событий FSM. Автоматически отключается, если установлен мод Reharmonization. Вступает в силу при следующей загрузке.</color>" },
+            { "settings.engine_patches_hint", "<color=#9AA6B2>Низкоуровневые правки самого кода игры: пропускает лишние обновления трансформов, кэширует рейкасты наведения мыши по слоям и чинит медленный цикл событий FSM. Вступает в силу при следующей загрузке.</color>" },
             { "settings.sleep_bodies", "Усыплять дальние физ-объекты" },
-            { "settings.sleep_bodies_hint", "<color=#9AA6B2>Периодически усыпляет дальние, уже неподвижные физические тела. Автоматически отключается, если установлен мод MSWCOptimization.</color>" },
+            { "settings.sleep_bodies_hint", "<color=#9AA6B2>Периодически усыпляет дальние, уже неподвижные физические тела.</color>" },
             { "settings.lod", "Дальние модели (LOD)" },
             { "settings.lod_hint", "<color=#9AA6B2>Показывает упрощённые модели дальних объектов.</color>" },
             { "settings.disable_skidmarks", "Скрывать следы от шин" },
@@ -298,6 +303,11 @@ namespace MOPR.Localization
             { "rules.later_btn", "Позже" },
             { "rules.later_msg", "Хорошо. Скачать их можно в любой момент из настроек мода: «Сервер правил» → «Проверить обновления правил»." },
             { "rules.downloaded_msg", "Скачано файлов правил: {0}\n\n{1}\nПерезапустите игру, чтобы они вступили в силу." },
+
+            // === Предупреждение о совместимости ===
+            { "compat.title", "MOP Revival — Обнаружен несовместимый мод" },
+            { "compat.msg", "MOP Revival обнаружил несовместимый мод:\n\n{0}\n\nОн выполняет ту же работу, что и MOP Revival, поэтому вместе они вызывают конфликты, вылеты и сломанную оптимизацию. Отключите его в загрузчике модов и перезапустите игру.\n\nПока он установлен, MOP Revival остаётся неактивным." },
+            { "compat.msg_plural", "MOP Revival обнаружил несовместимые моды:\n\n{0}\n\nОни выполняют ту же работу, что и MOP Revival, поэтому вместе они вызывают конфликты, вылеты и сломанную оптимизацию. Отключите их в загрузчике модов и перезапустите игру.\n\nПока они установлены, MOP Revival остаётся неактивным." },
 
             // === Common ===
             { "common.yes", "Да" },
