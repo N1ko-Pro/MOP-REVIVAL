@@ -105,28 +105,58 @@ function RuleRow({ rule, open, onToggle }) {
           {loadError && <p className="db__status db__status--error">{loadError}</p>}
           {content === null && !loadError && <p className="db__status">{t('common.loading')}</p>}
           {parsed && (
-            <>
-              <ul className="rule__what">
-                {parsed.lines
-                  .filter((l) => l.level === 'ok')
-                  .map((l) => (
-                    <li key={l.n}>
-                      <code>{l.raw.trim()}</code>
-                      {l.message && <span> — {l.message}</span>}
-                    </li>
-                  ))}
-                {parsed.directiveCount === 0 && <li>{t('database.noActive')}</li>}
-              </ul>
-              <pre className="code code--sm">
-                <code>{content}</code>
-              </pre>
-              <a className="rule__download" href={rule.path} download>
-                {t('database.downloadFile', { id: rule.id })}
-              </a>
-            </>
+            <div className="rule__detail-grid">
+              <div className="rule__changes">
+                <h4 className="rule__detail-head">{t('database.changesHead')}</h4>
+                {parsed.directiveCount === 0 ? (
+                  <p className="rule__none">{t('database.noActive')}</p>
+                ) : (
+                  <ul className="rule__kinds">
+                    {summarizeKinds(parsed, t).map(({ key, count, label }) => (
+                      <li key={key} className="rule__kind">
+                        <span className="rule__kind-count">{count}</span>
+                        <span className="rule__kind-label">{label}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              <div className="rule__file">
+                <div className="rule__file-head">
+                  <span>{t('database.fileHead')}</span>
+                  <a className="rule__download" href={rule.path} download>
+                    {t('database.downloadFile')}
+                  </a>
+                </div>
+                <pre className="code code--sm rule__code">
+                  <code>{content}</code>
+                </pre>
+              </div>
+            </div>
           )}
         </div>
       )}
     </li>
   );
+}
+
+// Groups a parsed rule into compact "count × kind" chips so a file with many
+// directives stays readable instead of listing every single line.
+const KNOWN_KINDS = ['ignore', 'toggle', 'change_parent', 'no_lod', 'sector'];
+
+function summarizeKinds(parsed, t) {
+  const counts = {};
+  parsed.lines
+    .filter((l) => l.level === 'ok')
+    .forEach((l) => {
+      const raw = l.raw.trim();
+      const colon = raw.indexOf(':');
+      const key = colon === -1 ? raw.toLowerCase() : raw.slice(0, colon).trim().toLowerCase();
+      if (key === 'min_ver') return;
+      const group = KNOWN_KINDS.includes(key) ? key : 'flag';
+      counts[group] = (counts[group] || 0) + 1;
+    });
+  return [...KNOWN_KINDS, 'flag']
+    .filter((k) => counts[k])
+    .map((k) => ({ key: k, count: counts[k], label: t(`database.kinds.${k}`) }));
 }

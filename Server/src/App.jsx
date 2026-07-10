@@ -28,7 +28,7 @@ export default function App() {
     <>
       <header className="nav">
         <a className="nav__brand" href="#/" onClick={() => setMenuOpen(false)}>
-          <span className="nav__mark">MOP</span> Revival <span className="nav__hq">{t('nav.brandHq')}</span>
+          MOP<span className="nav__mark">R</span>
         </a>
 
         <button

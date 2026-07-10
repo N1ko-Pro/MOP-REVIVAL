@@ -9,6 +9,7 @@ import {
   parseRuleFile,
   validateModId,
   buildSubmitUrl,
+  entryToLine,
 } from '../lib/ruleSpec.js';
 import { useI18n, directiveText } from '../lib/i18n.jsx';
 import Validator from './Validator.jsx';
@@ -42,6 +43,7 @@ export default function RuleBuilder() {
   const result = useMemo(() => parseRuleFile(text), [text]);
   const idCheck = useMemo(() => validateModId(modId), [modId]);
   const canSubmit = result.ok && result.hasContent && idCheck.ok;
+  const readyCount = useMemo(() => entries.filter((e) => entryToLine(e) !== '').length, [entries]);
 
   const flagText = (name) => {
     const loc = directiveText[lang] && directiveText[lang][name];
@@ -109,7 +111,12 @@ export default function RuleBuilder() {
 
         {/* Step 2 — rules */}
         <section className="builder__step">
-          <h2>{t('builder.step2')}</h2>
+          <h2>
+            {t('builder.step2')}
+            {entries.length > 0 && (
+              <span className="builder__count">{t('builder.rulesReady', { done: readyCount, total: entries.length })}</span>
+            )}
+          </h2>
 
           <div className="builder__add">
             <select value={nextAction} onChange={(e) => setNextAction(e.target.value)} aria-label="Rule type">
@@ -134,10 +141,16 @@ export default function RuleBuilder() {
           {entries.length === 0 && <p className="builder__empty">{t('builder.empty')}</p>}
 
           <ul className="builder__list">
-            {entries.map((e, i) => (
-              <li key={e.id} className="builder__entry">
+            {entries.map((e, i) => {
+              const objEmpty = e.object.trim() === '';
+              const complete = entryToLine(e) !== '';
+              return (
+              <li key={e.id} className={`builder__entry${complete ? '' : ' builder__entry--todo'}`}>
                 <div className="builder__entry-head">
                   <span className="builder__entry-kind">{t(`builder.actions.${e.action}`)}</span>
+                  <span className={`builder__entry-status ${complete ? 'is-ready' : 'is-todo'}`}>
+                    {complete ? t('builder.entryReady') : t('builder.entryIncomplete')}
+                  </span>
                   <span className="builder__entry-tools">
                     <button type="button" title={t('builder.moveUp')} disabled={i === 0} onClick={() => move(e.id, -1)}>↑</button>
                     <button type="button" title={t('builder.moveDown')} disabled={i === entries.length - 1} onClick={() => move(e.id, 1)}>↓</button>
@@ -147,9 +160,10 @@ export default function RuleBuilder() {
                 <p className="builder__entry-help">{t(`builder.actionHelp.${e.action}`)}</p>
 
                 <div className="field-row">
-                  <label className="field">
+                  <label className={`field${objEmpty ? ' field--required' : ''}`}>
                     <span>{t('builder.fields.object')}</span>
-                    <input type="text" value={e.object} spellCheck={false} placeholder="ObjectName" onChange={(ev) => patch(e.id, { object: ev.target.value })} />
+                    <input type="text" value={e.object} spellCheck={false} placeholder={t('builder.objectPlaceholder')} onChange={(ev) => patch(e.id, { object: ev.target.value })} />
+                    {objEmpty && <small className="field__req">{t('builder.objectRequired')}</small>}
                   </label>
 
                   {e.action === 'toggle' && (
@@ -183,7 +197,8 @@ export default function RuleBuilder() {
                   <input type="text" value={e.comment} placeholder={t('builder.commentPlaceholder')} onChange={(ev) => patch(e.id, { comment: ev.target.value })} />
                 </label>
               </li>
-            ))}
+              );
+            })}
           </ul>
         </section>
 
@@ -204,6 +219,17 @@ export default function RuleBuilder() {
         {/* Step 4 — review & submit */}
         <section className="builder__step">
           <h2>{t('builder.step4')}</h2>
+
+          <div className={`builder__checklist${canSubmit ? ' is-complete' : ''}`}>
+            <span className="builder__checklist-head">{t('builder.checklistHead')}</span>
+            <ul>
+              <li className={idCheck.ok ? 'is-done' : 'is-todo'}>{t('builder.checklist.modId')}</li>
+              <li className={result.hasContent ? 'is-done' : 'is-todo'}>{t('builder.checklist.content')}</li>
+              <li className={result.ok ? 'is-done' : 'is-todo'}>{t('builder.checklist.valid')}</li>
+            </ul>
+            {canSubmit && <p className="builder__checklist-ok">{t('builder.allDone')}</p>}
+          </div>
+
           <div className="builder__preview">
             <div className="builder__preview-head">
               <span>{t('builder.previewTitle')}</span>
