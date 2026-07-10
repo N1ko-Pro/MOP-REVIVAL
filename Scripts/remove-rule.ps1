@@ -132,11 +132,17 @@ if (-not $NoManifest) {
     if (Test-Path (Join-Path $ServerDir 'package.json')) {
         Write-Step 'Regenerating manifest...'
         Push-Location $ServerDir
+        # Внешние процессы (npm) могут писать в stderr — под 'Stop' это рвёт скрипт.
+        $prevEap = $ErrorActionPreference
+        $ErrorActionPreference = 'Continue'
         try {
             npm run manifest
             if ($LASTEXITCODE -ne 0) { Write-Step 'Manifest regeneration failed.' 'Red' }
         }
-        finally { Pop-Location }
+        finally {
+            $ErrorActionPreference = $prevEap
+            Pop-Location
+        }
     }
     else {
         Write-Step 'Server/package.json not found - skipping manifest regeneration.' 'Yellow'
@@ -147,6 +153,9 @@ if (-not $NoManifest) {
 if ($Push) {
     Write-Step 'Committing and pushing...'
     Push-Location $RepoRoot
+    # git пишет прогресс в stderr — под 'Stop' PowerShell принял бы это за ошибку.
+    $prevEap = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
     try {
         foreach ($b in $deleted) {
             git add -A -- ("Server/rules/" + $b + '.mopconfig') 2>&1 | Out-Null
@@ -165,7 +174,10 @@ if ($Push) {
             Write-Step 'Pushed. Vercel will redeploy automatically.' 'Green'
         }
     }
-    finally { Pop-Location }
+    finally {
+        $ErrorActionPreference = $prevEap
+        Pop-Location
+    }
 }
 else {
     Write-Step 'Done (local only). Re-run with -Push to deploy the removal.' 'DarkGray'
