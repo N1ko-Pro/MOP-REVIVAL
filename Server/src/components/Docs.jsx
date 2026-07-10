@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useI18n } from '../lib/i18n.jsx';
+import { useHashRoute } from '../lib/router.js';
 
 // Detailed docs content lives here, colocated and bilingual, so the shared
 // i18n dictionary stays lean. Section headers/labels come from i18n.
@@ -58,9 +59,11 @@ const sectionIds = ['start', 'settings', 'faq', 'console'];
 
 export default function Docs() {
   const { t, lang } = useI18n();
+  const { sub } = useHashRoute();
   const [active, setActive] = useState('start');
   const c = CONTENT[lang] || CONTENT.en;
 
+  // Highlight the section currently in view.
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => entries.forEach((e) => e.isIntersecting && setActive(e.target.id)),
@@ -73,14 +76,24 @@ export default function Docs() {
     return () => observer.disconnect();
   }, []);
 
+  // Scroll to the section named in the URL (#/docs/<sub>) — covers sidebar
+  // clicks, direct links and browser back/forward. Offset is handled in CSS
+  // via scroll-margin-top so the heading clears the sticky nav.
+  useEffect(() => {
+    if (!sub || !sectionIds.includes(sub)) return;
+    setActive(sub);
+    const el = document.getElementById(sub);
+    if (el) window.requestAnimationFrame(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  }, [sub]);
+
   return (
     <div className="page docs">
       <aside className="docs__side">
         <nav>
           <p className="docs__side-title">{t('docs.nav')}</p>
           {sectionIds.map((id) => (
-            <a key={id} href={`#/docs/${id}`} className={active === id ? 'is-active' : ''} onClick={() => scrollToId(id)}>
-              {t(`docs.s.${id === 'start' ? 'start' : id === 'console' ? 'console' : id}`)}
+            <a key={id} href={`#/docs/${id}`} className={active === id ? 'is-active' : ''}>
+              {t(`docs.s.${id}`)}
             </a>
           ))}
         </nav>
@@ -158,11 +171,4 @@ export default function Docs() {
       </div>
     </div>
   );
-}
-
-function scrollToId(id) {
-  window.requestAnimationFrame(() => {
-    const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  });
 }

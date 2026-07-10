@@ -153,7 +153,7 @@ const dict = {
       moveDown: 'Move down',
       step3: '3 · Global flags',
       flagsLead: 'Optional switches that apply to the whole session. Leave them off unless you need them.',
-      step4: '4 · Review & submit',
+      step4: '3 · Review & submit',
       previewTitle: 'Generated file',
       advanced: 'Advanced: paste or drop an existing file',
       actions: {
@@ -193,6 +193,12 @@ const dict = {
       lead: 'A rule file is a plain-text file named after your mod\u2019s ID (e.g. FishingMod.mopconfig). It tells MOP how to treat your mod\u2019s objects. This page is the full reference; the builder writes it for you.',
       whyHead: 'Why you might need one',
       whyBody: 'MOP speeds up the game by enabling and disabling objects based on distance. Most objects are fine, but some break when toggled — an item vanishes, an FSM resets, a quest stops working. A rule file lets you say "leave this alone" or "also optimize this", so your mod stays compatible.',
+      tips: [
+        'Write spaces in object names as %20 — e.g. SATSUMA(557kg,%20248).',
+        'Lines starting with # are comments.',
+        'One directive per line. Unknown directives are ignored with a warning in the log.',
+        "The file name must match the target mod's ID — e.g. FishingMod.mopconfig.",
+      ],
       coreHead: 'Core directives',
       headerHead: 'File header',
       flagsHead: 'Standalone flags',
@@ -375,7 +381,7 @@ const dict = {
       moveDown: 'Вниз',
       step3: '3 · Глобальные флаги',
       flagsLead: 'Необязательные переключатели на всю сессию. Не включайте без необходимости.',
-      step4: '4 · Проверка и отправка',
+      step4: '3 · Проверка и отправка',
       previewTitle: 'Готовый файл',
       advanced: 'Дополнительно: вставить или перетащить готовый файл',
       actions: {
@@ -415,6 +421,12 @@ const dict = {
       lead: 'Файл правил — это текстовый файл с именем по ID вашего мода (например, FishingMod.mopconfig). Он говорит моду, как обходиться с объектами вашего мода. Здесь — полный справочник; конструктор напишет файл за вас.',
       whyHead: 'Зачем это нужно',
       whyBody: 'MOP ускоряет игру, включая и выключая объекты по дистанции. Большинство объектов это переносит нормально, но некоторые ломаются при переключении — предмет исчезает, FSM сбрасывается, квест перестаёт работать. Файл правил позволяет сказать «не трогать это» или «оптимизировать и это», чтобы мод оставался совместимым.',
+      tips: [
+        'Пробелы в именах объектов пишите как %20 — например, SATSUMA(557kg,%20248).',
+        'Строки, начинающиеся с #, — это комментарии.',
+        'Одна директива на строку. Неизвестные директивы игнорируются с предупреждением в логе.',
+        'Имя файла должно совпадать с ID мода — например, FishingMod.mopconfig.',
+      ],
       coreHead: 'Основные директивы',
       headerHead: 'Заголовок файла',
       flagsHead: 'Отдельные флаги',

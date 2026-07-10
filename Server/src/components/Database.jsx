@@ -93,11 +93,10 @@ function RuleRow({ rule, open, onToggle }) {
       <button type="button" className="rule__summary" onClick={onToggle} aria-expanded={open}>
         <span className="rule__chevron">{open ? '▾' : '▸'}</span>
         <span className="rule__id">{rule.id}</span>
-        {typeof rule.minVer === 'string' && <span className="rule__badge">MOP {rule.minVer}+</span>}
         {typeof rule.directiveCount === 'number' && (
           <span className="rule__badge rule__badge--muted">{rule.directiveCount} {t('database.rules')}</span>
         )}
-        <span className="rule__sha" title={rule.sha256}>{rule.sha256.slice(0, 8)}</span>
+        {typeof rule.minVer === 'string' && <span className="rule__badge">MOP {rule.minVer}+</span>}
       </button>
 
       {open && (
@@ -105,34 +104,35 @@ function RuleRow({ rule, open, onToggle }) {
           {loadError && <p className="db__status db__status--error">{loadError}</p>}
           {content === null && !loadError && <p className="db__status">{t('common.loading')}</p>}
           {parsed && (
-            <div className="rule__detail-grid">
+            <>
               <div className="rule__changes">
-                <h4 className="rule__detail-head">{t('database.changesHead')}</h4>
+                <span className="rule__detail-head">{t('database.changesHead')}</span>
                 {parsed.directiveCount === 0 ? (
                   <p className="rule__none">{t('database.noActive')}</p>
                 ) : (
-                  <ul className="rule__kinds">
+                  <div className="rule__chips">
                     {summarizeKinds(parsed, t).map(({ key, count, label }) => (
-                      <li key={key} className="rule__kind">
-                        <span className="rule__kind-count">{count}</span>
-                        <span className="rule__kind-label">{label}</span>
-                      </li>
+                      <span key={key} className="rule__chip">
+                        <b>{count}</b> {label}
+                      </span>
                     ))}
-                  </ul>
+                  </div>
                 )}
               </div>
-              <div className="rule__file">
-                <div className="rule__file-head">
+
+              <details className="rule__file">
+                <summary className="rule__file-summary">
                   <span>{t('database.fileHead')}</span>
-                  <a className="rule__download" href={rule.path} download>
-                    {t('database.downloadFile')}
-                  </a>
-                </div>
+                </summary>
                 <pre className="code code--sm rule__code">
                   <code>{content}</code>
                 </pre>
-              </div>
-            </div>
+              </details>
+
+              <a className="rule__download" href={rule.path} download>
+                {t('database.downloadFile')} · {rule.id}.mopconfig
+              </a>
+            </>
           )}
         </div>
       )}

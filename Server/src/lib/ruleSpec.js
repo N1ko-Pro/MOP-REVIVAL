@@ -223,7 +223,9 @@ export function buildRuleText({ modId, minVer, entries, flags }) {
 // ---------------------------------------------------------------------------
 // Validation
 // ---------------------------------------------------------------------------
-const VERSION_RE = /^\d+(\.\d+){0,3}$/;
+// Numeric version with an optional letter suffix (e.g. 4.0.0b for a beta).
+// The mod's parser strips non-digits per component, so a trailing tag is fine.
+const VERSION_RE = /^\d+(\.\d+){0,3}[A-Za-z]*$/;
 const VEC_RE = /^-?\d+(\.\d+)?,-?\d+(\.\d+)?,-?\d+(\.\d+)?$/;
 
 /**

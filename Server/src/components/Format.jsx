@@ -1,5 +1,5 @@
 import React from 'react';
-import { directivesByGroup, authorTips, EXAMPLE_RULE } from '../lib/ruleSpec.js';
+import { directivesByGroup, EXAMPLE_RULE } from '../lib/ruleSpec.js';
 import { useI18n, directiveText } from '../lib/i18n.jsx';
 
 function useDirText() {
@@ -51,7 +51,7 @@ export default function Format() {
         <h2>{t('format.whyHead')}</h2>
         <p>{t('format.whyBody')}</p>
         <ul className="ticks">
-          {authorTips.map((tip) => (
+          {t('format.tips').map((tip) => (
             <li key={tip}>{tip}</li>
           ))}
         </ul>

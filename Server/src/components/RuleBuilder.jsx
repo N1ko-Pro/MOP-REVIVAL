@@ -2,8 +2,6 @@ import React, { useMemo, useState } from 'react';
 import {
   BUILDER_ACTIONS,
   TOGGLE_MODES,
-  FLAG_DIRECTIVES,
-  DIRECTIVES,
   MOP_VERSION,
   buildRuleText,
   parseRuleFile,
@@ -11,7 +9,7 @@ import {
   buildSubmitUrl,
   entryToLine,
 } from '../lib/ruleSpec.js';
-import { useI18n, directiveText } from '../lib/i18n.jsx';
+import { useI18n } from '../lib/i18n.jsx';
 import Validator from './Validator.jsx';
 import ReviewSteps from './ReviewSteps.jsx';
 
@@ -30,26 +28,19 @@ const EXAMPLE_ENTRIES = [
 ];
 
 export default function RuleBuilder() {
-  const { t, lang } = useI18n();
+  const { t } = useI18n();
   const [modId, setModId] = useState('');
   const [minVer, setMinVer] = useState(MOP_VERSION);
   const [entries, setEntries] = useState([]);
-  const [flags, setFlags] = useState({});
   const [nextAction, setNextAction] = useState('ignore');
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const text = useMemo(() => buildRuleText({ modId, minVer, entries, flags }), [modId, minVer, entries, flags]);
+  const text = useMemo(() => buildRuleText({ modId, minVer, entries }), [modId, minVer, entries]);
   const result = useMemo(() => parseRuleFile(text), [text]);
   const idCheck = useMemo(() => validateModId(modId), [modId]);
   const canSubmit = result.ok && result.hasContent && idCheck.ok;
   const readyCount = useMemo(() => entries.filter((e) => entryToLine(e) !== '').length, [entries]);
-
-  const flagText = (name) => {
-    const loc = directiveText[lang] && directiveText[lang][name];
-    if (loc) return loc.summary;
-    return (DIRECTIVES[name] && DIRECTIVES[name].summary) || name;
-  };
 
   const patch = (id, changes) => setEntries((list) => list.map((e) => (e.id === id ? { ...e, ...changes } : e)));
   const remove = (id) => setEntries((list) => list.filter((e) => e.id !== id));
@@ -202,21 +193,7 @@ export default function RuleBuilder() {
           </ul>
         </section>
 
-        {/* Step 3 — flags */}
-        <section className="builder__step">
-          <h2>{t('builder.step3')}</h2>
-          <p className="builder__flags-lead">{t('builder.flagsLead')}</p>
-          <div className="builder__flags">
-            {FLAG_DIRECTIVES.map((f) => (
-              <label key={f} className="check">
-                <input type="checkbox" checked={!!flags[f]} onChange={(ev) => setFlags((s) => ({ ...s, [f]: ev.target.checked }))} />
-                <span><code>{f}</code> — {flagText(f)}</span>
-              </label>
-            ))}
-          </div>
-        </section>
-
-        {/* Step 4 — review & submit */}
+        {/* Step 3 — review & submit */}
         <section className="builder__step">
           <h2>{t('builder.step4')}</h2>
 

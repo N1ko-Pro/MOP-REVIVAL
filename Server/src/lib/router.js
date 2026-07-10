@@ -19,8 +19,15 @@ export function useHashRoute() {
 
   useEffect(() => {
     const onChange = () => {
-      setRoute(parse(window.location.hash));
-      window.scrollTo({ top: 0, behavior: 'auto' });
+      setRoute((prev) => {
+        const next = parse(window.location.hash);
+        // Only jump to the top when switching between top-level pages. When just
+        // the in-page anchor (sub) changes, let the page scroll to that section.
+        if (next.page !== prev.page) {
+          window.scrollTo({ top: 0, behavior: 'auto' });
+        }
+        return next;
+      });
     };
     window.addEventListener('hashchange', onChange);
     return () => window.removeEventListener('hashchange', onChange);
