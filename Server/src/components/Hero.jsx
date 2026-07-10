@@ -8,10 +8,12 @@ export default function Hero() {
   return (
     <section className="hero">
       <div className="hero__inner">
-        <img className="hero__icon" src={iconUrl} alt="MOPR" width="112" height="112" />
         <p className="hero__eyebrow">{t('hero.eyebrow')}</p>
         <h1 className="hero__title">
-          MOP <span className="hero__accent">Revival</span>
+          <img className="hero__icon" src={iconUrl} alt="" aria-hidden="true" />
+          <span className="hero__title-text">
+            MOP <span className="hero__accent">Revival</span>
+          </span>
         </h1>
         <p className="hero__lead">{t('hero.lead')}</p>
         <div className="hero__cta">
