@@ -150,7 +150,15 @@ code {
   padding: 0.7rem 1.3rem;
   border-radius: var(--radius);
   font-weight: 600;
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.2;
   border: 1px solid transparent;
+  /* Native <button> defaults to a light UA background; force transparent so
+     ghost buttons show light text on the dark page instead of white-on-white. */
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
 }
 
 .btn:hover {
