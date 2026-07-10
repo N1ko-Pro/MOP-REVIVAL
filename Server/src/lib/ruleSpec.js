@@ -7,12 +7,12 @@
 // KEEP IN SYNC WITH THE MOD PARSER: src/Rules/RuleParser.cs
 // Only the directives handled by that parser are documented/validated here.
 
-export const MOP_VERSION = '4.0.0';
+export const MOP_VERSION = '4.0.0b';
 
 // GitHub repository that hosts the rule database (used by the "submit" flow).
 // A submission opens a prefilled "new file" page that creates a pull request.
 // Maintainer: point these at the real repository / path if it changes.
-export const REPO = 'ANICKON/MOP-REVIVAL';
+export const REPO = 'N1ko-Pro/MOP-REVIVAL';
 export const RULES_PATH = 'Server/rules';
 
 // ---------------------------------------------------------------------------
