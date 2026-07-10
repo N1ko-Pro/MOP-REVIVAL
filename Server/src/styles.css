@@ -63,18 +63,18 @@ code {
 }
 
 .nav__brand {
-  color: var(--text);
-  font-weight: 700;
-  font-size: 1.1rem;
-  letter-spacing: 0.5px;
+  display: inline-flex;
+  align-items: center;
 }
 
 .nav__brand:hover {
   text-decoration: none;
 }
 
-.nav__mark {
-  color: var(--accent);
+.nav__logo {
+  display: block;
+  height: 2.1rem;
+  width: auto;
 }
 
 .nav__links {

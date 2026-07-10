@@ -7,6 +7,7 @@ import Database from './components/Database.jsx';
 import Footer from './components/Footer.jsx';
 import { useHashRoute } from './lib/router.js';
 import { useI18n, LANGS } from './lib/i18n.jsx';
+import iconUrl from './assets/icon.png';
 
 const order = ['home', 'builder', 'format', 'database', 'docs'];
 
@@ -27,8 +28,8 @@ export default function App() {
   return (
     <>
       <header className="nav">
-        <a className="nav__brand" href="#/" onClick={() => setMenuOpen(false)}>
-          MOP<span className="nav__mark">R</span>
+        <a className="nav__brand" href="#/" aria-label="MOPR" onClick={() => setMenuOpen(false)}>
+          <img className="nav__logo" src={iconUrl} alt="MOPR" />
         </a>
 
         <button
