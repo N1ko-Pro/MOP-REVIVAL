@@ -1,8 +1,7 @@
 // MOPR — Modern Optimization Plugin (переработка мода MOP, Konrad Figura / Athlon). Revival by ANICKON. GPLv3.
 //
 // Оркестратор движковых Harmony-патчей игрового кода. Применяется один раз за процесс, за тумблером
-// настройки и с проверкой совместимости: если установлен мод Reharmonization (делает то же и больше),
-// свои патчи НЕ накладываем, чтобы не патчить один и тот же код дважды. Сами патчи — в GamePatches.
+// настройки. Сами патчи — в GamePatches.
 
 using System;
 using System.Reflection;
@@ -29,13 +28,6 @@ namespace MOPR.Performance.Engine
 
             if (!MoprSettings.EnginePatchesOn)
                 return;
-
-            // Reharmonization уже патчит этот код — не дублируем.
-            if (ModLoader.IsModPresent("Reharmonization"))
-            {
-                ModConsole.Log("[MOPR] Engine patches skipped: Reharmonization is installed.");
-                return;
-            }
 
             try
             {

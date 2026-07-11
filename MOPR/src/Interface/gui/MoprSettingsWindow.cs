@@ -152,6 +152,10 @@ namespace MOPR.Interface.Gui
             MoprSettings.HideLakeVegetation = Settings.AddCheckBox("mopr_fix_lake_weed", LocalizationCore.Get("settings.fix_lake_weed"), false);
             LocalizedUi.Label(MoprSettings.HideLakeVegetation, "settings.fix_lake_weed");
             LocalizedUi.Text(Settings.AddText(LocalizationCore.Get("settings.fix_lake_weed_hint")), "settings.fix_lake_weed_hint");
+
+            MoprSettings.ParkingBrakeAnchor = Settings.AddCheckBox("mopr_fix_parking_brake_anchor", LocalizationCore.Get("settings.parking_brake_anchor"), false);
+            LocalizedUi.Label(MoprSettings.ParkingBrakeAnchor, "settings.parking_brake_anchor");
+            LocalizedUi.Text(Settings.AddText(LocalizationCore.Get("settings.parking_brake_anchor_hint")), "settings.parking_brake_anchor_hint");
         }
 
         private static void BuildSaves()

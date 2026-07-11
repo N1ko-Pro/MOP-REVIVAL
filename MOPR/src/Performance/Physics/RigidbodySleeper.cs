@@ -5,11 +5,9 @@
 // MSWCOptimization. Трогаем только НЕ кинематические и уже почти неподвижные тела дальше порога —
 // такие Unity и сам бы усыпил; мы лишь ускоряем это. Тела с суставами (Joint) не трогаем — их
 // пружина не разбудит спящее тело, и шарнирные детали (двери/капот/багажник) перестают открываться.
-// Проход редкий (интервал), поэтому дорогой FindObjectsOfType не бьёт по кадру. Пропускается, если
-// установлен MSWCOptimization (делает то же).
+// Проход редкий (интервал), поэтому дорогой FindObjectsOfType не бьёт по кадру.
 
 using UnityEngine;
-using MSCLoader;
 using MOPR.Common;
 using MOPR.Common.Enumerations;
 
@@ -25,18 +23,10 @@ namespace MOPR.Performance.Optimizers
 
         private readonly ModuleFailsafe guard = new ModuleFailsafe("RIGIDBODY_SLEEPER_ERROR");
         private float timer;
-        private bool skip;
-
-        private void Awake()
-        {
-            skip = ModLoader.IsModPresent("MSWCOptimization");
-            if (skip)
-                ModConsole.Log("[MOPR] Rigidbody sleeper skipped: MSWCOptimization is installed.");
-        }
 
         private void Update()
         {
-            if (skip || !MoprSettings.IsModActive || !MoprSettings.SleepDistantBodiesOn)
+            if (!MoprSettings.IsModActive || !MoprSettings.SleepDistantBodiesOn)
                 return;
 
             float interval = MoprSettings.Mode == PerformanceMode.Performance ? PerformanceIntervalSeconds : BaseIntervalSeconds;

@@ -3,11 +3,9 @@
 // Адаптивная сборка мусора (идея — GarbageCollectionOptimizer из MSWCOptimization). Раз в
 // CheckInterval проверяет прирост управляемой памяти и вызывает GC.Collect ТОЛЬКО при заметном
 // давлении (> порога) — это сглаживает микрофризы от стихийных сборок, не собирая мусор без нужды.
-// Пропускается, если установлен MSWCOptimization (делает то же).
 
 using System;
 using UnityEngine;
-using MSCLoader;
 using MOPR.Common;
 
 namespace MOPR.Performance.Optimizers
@@ -20,20 +18,15 @@ namespace MOPR.Performance.Optimizers
         private readonly ModuleFailsafe guard = new ModuleFailsafe("ADAPTIVE_GC_ERROR");
         private float timer;
         private long lastMemory;
-        private bool skip;
 
         private void Awake()
         {
-            skip = ModLoader.IsModPresent("MSWCOptimization");
-            if (skip)
-                ModConsole.Log("[MOPR] Adaptive GC skipped: MSWCOptimization is installed.");
-
             lastMemory = GC.GetTotalMemory(false);
         }
 
         private void Update()
         {
-            if (skip || !MoprSettings.IsModActive || !MoprSettings.AdaptiveGcOn)
+            if (!MoprSettings.IsModActive || !MoprSettings.AdaptiveGcOn)
                 return;
 
             timer += Time.unscaledDeltaTime;

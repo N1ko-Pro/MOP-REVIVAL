@@ -137,6 +137,7 @@ namespace MOPR.Common
             sb.Append("DisableEmptyItems: ").Append(MoprSettings.DisableEmptyItemsOn).AppendLine();
             sb.Append("NoSkidmarks: ").Append(MoprSettings.DisableSkidmarksOn).AppendLine();
             sb.Append("HideLakeVegetation: ").Append(MoprSettings.HideLakeVegetationOn).AppendLine();
+            sb.Append("ParkingBrakeAnchor: ").Append(MoprSettings.ParkingBrakeAnchorOn).AppendLine();
 
             if (ModLoader.CurrentScene == CurrentScene.Game)
             {
