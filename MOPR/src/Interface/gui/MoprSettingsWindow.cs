@@ -148,6 +148,10 @@ namespace MOPR.Interface.Gui
             MoprSettings.DestroyEmptyBottles = Settings.AddCheckBox("mopr_destroy_empty_bottles", LocalizationCore.Get("settings.destroy_empty_bottles"), false);
             LocalizedUi.Label(MoprSettings.DestroyEmptyBottles, "settings.destroy_empty_bottles");
             LocalizedUi.Text(Settings.AddText(LocalizationCore.Get("settings.destroy_empty_bottles_hint")), "settings.destroy_empty_bottles_hint");
+
+            MoprSettings.HideLakeVegetation = Settings.AddCheckBox("mopr_fix_lake_weed", LocalizationCore.Get("settings.fix_lake_weed"), false);
+            LocalizedUi.Label(MoprSettings.HideLakeVegetation, "settings.fix_lake_weed");
+            LocalizedUi.Text(Settings.AddText(LocalizationCore.Get("settings.fix_lake_weed_hint")), "settings.fix_lake_weed_hint");
         }
 
         private static void BuildSaves()

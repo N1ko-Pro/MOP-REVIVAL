@@ -136,6 +136,7 @@ namespace MOPR.Common
             sb.Append("DestroyEmptyBottles: ").Append(MoprSettings.DestroyEmptyBottlesOn).AppendLine();
             sb.Append("DisableEmptyItems: ").Append(MoprSettings.DisableEmptyItemsOn).AppendLine();
             sb.Append("NoSkidmarks: ").Append(MoprSettings.DisableSkidmarksOn).AppendLine();
+            sb.Append("HideLakeVegetation: ").Append(MoprSettings.HideLakeVegetationOn).AppendLine();
 
             if (ModLoader.CurrentScene == CurrentScene.Game)
             {

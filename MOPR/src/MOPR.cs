@@ -152,6 +152,7 @@ namespace MOPR
             GameObject mop = new GameObject("MOPR");
             CompatibilityManager.Initialize();
             mop.AddComponent<Core>();
+            mop.AddComponent<Fixes.LakeVegetationFix>();
             SaveManager.AddSaveFlag();
         }
 
