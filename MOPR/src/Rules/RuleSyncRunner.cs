@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using UnityEngine;
 using MSCLoader;
+using MOPR.Common;
 using MOPR.Localization;
 using MOPR.Interface.Helpers;
 
@@ -63,7 +64,7 @@ namespace MOPR.Rules
 
                 started = true;
                 elapsed = 0f;
-                ModConsole.Log("[MOPR] " + LocalizationCore.Get("log.rules_sync_start"));
+                ModConsole.Status("[MOPR] " + LocalizationCore.Get("log.rules_sync_start"));
                 RemoteRuleSync.BeginSync(RulesDirectory, ModIds);
                 return;
             }
@@ -82,13 +83,17 @@ namespace MOPR.Rules
         {
             if (RemoteRuleSync.ManifestReached)
             {
-                ModConsole.Log("[MOPR] " + LocalizationCore.Get("log.rules_sync_ok", RemoteRuleSync.ManifestCount, RemoteRuleSync.Matched, RemoteRuleSync.Downloaded));
+                // «Сервер правил - ДОСТУПЕН» (ДОСТУПЕН зелёным), затем со второй строки счётчики.
+                ModConsole.Status("[MOPR] " + LocalizationCore.Get("log.rules_sync_ok",
+                    MoprColors.Success(LocalizationCore.Get("log.server_status_available")),
+                    RemoteRuleSync.ManifestCount, RemoteRuleSync.Matched));
                 return;
             }
 
-            ModConsole.LogWarning("[MOPR] " + LocalizationCore.Get("log.rules_sync_offline"));
+            ModConsole.Status("[MOPR] " + LocalizationCore.Get("log.rules_sync_offline",
+                MoprColors.Error(LocalizationCore.Get("log.server_status_unavailable"))));
             if (!string.IsNullOrEmpty(RemoteRuleSync.LastError))
-                ModConsole.LogWarning("[MOPR] " + LocalizationCore.Get("log.rules_sync_error", RemoteRuleSync.LastError));
+                ModConsole.Log("[MOPR] " + LocalizationCore.Get("log.rules_sync_error", RemoteRuleSync.LastError));
         }
     }
 }

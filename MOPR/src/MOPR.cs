@@ -29,7 +29,7 @@ namespace MOPR
         public override string Version => "4.0.0b";
         public const string SubVersion = "";
         public const string Edition = "MSCLoader";
-        public override string Description => "The <color=yellow>ultimate</color> My Summer Car optimization project!";
+        public override string Description => LocalizationCore.Get("mod.description");
 
         // Иконка мода (icon.png вшит в DLL). Читается один раз и кэшируется.
         private static byte[] iconBytes;
@@ -128,11 +128,19 @@ namespace MOPR
 
             ConsoleCommand.Add(new Commands.MoprCommand());
 
-            CompatibilityManager.ShowConflictWarningIfNeeded();
+            // Несовместимый мод найден — предупреждаем и ПОЛНОСТЬЮ отключаем MOPR в MSCLoader.
+            if (CompatibilityManager.IsConfilctingModPresent(out string conflict))
+            {
+                CompatibilityManager.ShowConflictWarningIfNeeded();
+                DisableSelf(conflict);
+                return;
+            }
 
             SaveManager.VerifySave();
 
-            ModConsole.Log("<color=green>MOPR " + ModVersion + " initialized!</color>");
+            // Всегда видимая строка инициализации (не гейтится настройкой «Показывать логи»).
+            // Версия — бирюзовым, остальной текст — бежевым (цвета берёт ModConsole.Status из MoprColors).
+            ModConsole.Status("[MOPR] " + LocalizationCore.Get("log.mod_initialized", MoprColors.Version(ModVersion)));
         }
 
         // Запускается один раз после полной загрузки игры (PostLoad): здесь создаётся Core, чтобы мод
@@ -154,6 +162,28 @@ namespace MOPR
             mop.AddComponent<Core>();
             mop.AddComponent<Fixes.LakeVegetationFix>();
             SaveManager.AddSaveFlag();
+        }
+
+        /// <summary>
+        /// Полностью деактивирует MOPR в MSCLoader (как галочка «выключить мод» в меню). Свойство
+        /// Mod.isDisabled имеет internal-сеттер, поэтому ставим его через рефлексию. После этого
+        /// MSCLoader пропускает все фазы мода (OnLoad/PostLoad/Update и т.д.) — мод не работает.
+        /// Значение не сохраняется в настройки, поэтому при удалении конфликтного мода MOPR включится сам.
+        /// </summary>
+        private void DisableSelf(string conflictingModName)
+        {
+            try
+            {
+                PropertyInfo isDisabled = typeof(Mod).GetProperty("isDisabled", BindingFlags.Public | BindingFlags.Instance);
+                MethodInfo setter = isDisabled?.GetSetMethod(true);
+                setter?.Invoke(this, new object[] { true });
+            }
+            catch (Exception ex)
+            {
+                ModConsole.LogError("MOPR: unable to self-disable — " + ex.Message);
+            }
+
+            ModConsole.LogError("MOPR disabled: incompatible mod present: <color=yellow>" + conflictingModName + "</color>");
         }
 
         private void RemoveUnusedFiles()

@@ -140,15 +140,37 @@ namespace MOPR.FSM
 
         private static FsmFloat battery1;
         private static FsmFloat battery2;
-        public static bool IsBatteryInstalled()
+
+        /// <summary>Лениво разрешает FsmFloat затяжки болтов АКБ (Bolt1/Bolt2 в Database/PartsStatus).</summary>
+        private static void EnsureBatteryBolts()
         {
             if (battery1 == null)
                 battery1 = GameObject.Find("Database/PartsStatus/Battery").GetComponent<PlayMakerFSM>().FsmVariables.GetFsmFloat("Bolt1");
 
             if (battery2 == null)
                 battery2 = GameObject.Find("Database/PartsStatus/Battery").GetComponent<PlayMakerFSM>().FsmVariables.GetFsmFloat("Bolt2");
+        }
 
+        public static bool IsBatteryInstalled()
+        {
+            EnsureBatteryBolts();
             return battery1.Value > 0 || battery2.Value > 0;
+        }
+
+        /// <summary>Читает текущую затяжку болтов АКБ (для сохранения перед пересборкой).</summary>
+        public static void GetBatteryBolts(out float bolt1, out float bolt2)
+        {
+            EnsureBatteryBolts();
+            bolt1 = battery1.Value;
+            bolt2 = battery2.Value;
+        }
+
+        /// <summary>Восстанавливает затяжку болтов АКБ (после ASSEMBLE, который их обнуляет).</summary>
+        public static void SetBatteryBolts(float bolt1, float bolt2)
+        {
+            EnsureBatteryBolts();
+            battery1.Value = bolt1;
+            battery2.Value = bolt2;
         }
 
         private static FsmBool playerHelmet;

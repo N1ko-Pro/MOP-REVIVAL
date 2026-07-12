@@ -19,6 +19,7 @@ namespace MOPR.Localization
         {
             // === Logs ===
             { "log.menu_init", "{0} loaded successfully!" },
+            { "log.mod_initialized", "Successfully initialized! Version {0}" },
             { "log.disabled", "Optimization disabled in settings; all managed objects re-enabled." },
             { "log.lang_changed", "Language set to English." },
             { "log.catalog_summary", "Catalog: {0} object(s) registered ({1} log wall(s))." },
@@ -37,10 +38,12 @@ namespace MOPR.Localization
             { "log.bolt_snapshot_saved", "Bolt snapshot captured ({0} part(s))." },
             { "log.save_corrupt", "Save looks corrupt: {0} bytes now vs {1} bytes in the last backup." },
             { "log.continue_restored", "Re-enabled the main menu Continue button." },
-            { "log.rules_sync_start", "Checking the rules server for updates..." },
-            { "log.rules_sync_ok", "Rules server OK: {0} rule(s) online, {1} match your mods, {2} downloaded." },
-            { "log.rules_sync_offline", "Rules server unavailable; using local rule files." },
+            { "log.rules_sync_start", "Checking the rules server availability..." },
+            { "log.rules_sync_ok", "Rules server - {0}\nAvailable - {1}; Active - {2}" },
+            { "log.rules_sync_offline", "Rules server - {0}" },
             { "log.rules_sync_error", "Rules server error: {0}" },
+            { "log.server_status_available", "AVAILABLE" },
+            { "log.server_status_unavailable", "UNAVAILABLE" },
             { "log.rules_downloaded", "Downloaded {0} rule file(s) from the server." },
 
             // === Performance overlay / report ===
@@ -51,6 +54,25 @@ namespace MOPR.Localization
             // === Status (always shown on load) ===
             { "status.core_init", "Core initialized" },
             { "status.managed", "Managed objects: {0}" },
+            { "status.core_loaded", "Core loaded" },
+            { "status.module_loaded", "{0} module - Loaded ({1})" },
+            { "status.module_off", "{0} module - Disabled" },
+            { "status.mod.world", "World objects" },
+            { "status.mod.items", "Items" },
+            { "status.mod.vehicles", "Vehicles" },
+            { "status.mod.places", "Locations" },
+            { "status.feature", "{0} - {1}" },
+            { "status.word.enabled", "Enabled" },
+            { "status.word.disabled", "Disabled" },
+            { "status.word.applied", "Applied" },
+            { "status.feat.fixes", "Game fixes" },
+            { "status.feat.engine", "Engine patches" },
+            { "status.feat.sector", "Indoor culling" },
+            { "status.feat.ddd", "Dynamic draw distance" },
+            { "status.feat.sleep", "Sleep distant bodies" },
+            { "status.feat.gc", "Adaptive GC" },
+            { "status.feat.saves", "Save protection" },
+            { "status.ready", "Ready to go!" },
 
             // === Console command (mopr) ===
             { "cmd.help", "MOP Revival diagnostics. Usage: mopr help | version | status | monitor | presave | stop | start | config | logs | report" },
@@ -69,6 +91,7 @@ namespace MOPR.Localization
         {
             // === Logs ===
             { "log.menu_init", "{0} успешно загружен!" },
+            { "log.mod_initialized", "Успешно инициализирован! Версия {0}" },
             { "log.disabled", "Оптимизация отключена в настройках; все управляемые объекты включены обратно." },
             { "log.lang_changed", "Язык переключён на русский." },
             { "log.catalog_summary", "Каталог: зарегистрировано объектов: {0} (бревенчатых стен: {1})." },
@@ -87,10 +110,12 @@ namespace MOPR.Localization
             { "log.bolt_snapshot_saved", "Снимок затяжки болтов сохранён ({0} шт.)." },
             { "log.save_corrupt", "Сейв выглядит повреждённым: сейчас {0} байт против {1} байт в последнем бэкапе." },
             { "log.continue_restored", "Кнопка «Продолжить» в главном меню включена обратно." },
-            { "log.rules_sync_start", "Проверяю сервер правил на обновления..." },
-            { "log.rules_sync_ok", "Сервер правил OK: онлайн правил — {0}, под ваши моды подходит — {1}, скачано — {2}." },
-            { "log.rules_sync_offline", "Сервер правил недоступен; используются локальные файлы правил." },
+            { "log.rules_sync_start", "Запуск проверки доступности сервера..." },
+            { "log.rules_sync_ok", "Сервер правил - {0}\nДоступно - {1}; Активно - {2}" },
+            { "log.rules_sync_offline", "Сервер правил - {0}" },
             { "log.rules_sync_error", "Ошибка сервера правил: {0}" },
+            { "log.server_status_available", "ДОСТУПЕН" },
+            { "log.server_status_unavailable", "НЕДОСТУПЕН" },
             { "log.rules_downloaded", "Скачано файлов правил с сервера: {0}." },
 
             // === Performance overlay / report ===
@@ -101,6 +126,25 @@ namespace MOPR.Localization
             // === Status (always shown on load) ===
             { "status.core_init", "Ядро инициализировано" },
             { "status.managed", "Объектов под управлением: {0}" },
+            { "status.core_loaded", "Ядро загружено" },
+            { "status.module_loaded", "Модуль {0} - Загружен ({1})" },
+            { "status.module_off", "Модуль {0} - Отключён" },
+            { "status.mod.world", "Объекты мира" },
+            { "status.mod.items", "Предметы" },
+            { "status.mod.vehicles", "Транспорт" },
+            { "status.mod.places", "Локации" },
+            { "status.feature", "{0} - {1}" },
+            { "status.word.enabled", "Включено" },
+            { "status.word.disabled", "Отключено" },
+            { "status.word.applied", "Применены" },
+            { "status.feat.fixes", "Игровые фиксы" },
+            { "status.feat.engine", "Движковые патчи" },
+            { "status.feat.sector", "Куллинг помещений" },
+            { "status.feat.ddd", "Динамическая дальность" },
+            { "status.feat.sleep", "Сон дальних тел" },
+            { "status.feat.gc", "Адаптивный GC" },
+            { "status.feat.saves", "Защита сохранений" },
+            { "status.ready", "Готово к работе!" },
 
             // === Console command (mopr) ===
             { "cmd.help", "Диагностика MOP Revival. Использование: mopr help | version | status | monitor | presave | stop | start | config | logs | report" },

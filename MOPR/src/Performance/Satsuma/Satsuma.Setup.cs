@@ -185,9 +185,12 @@ namespace MOPR.Vehicles.Cases
         {
             try
             {
+                // Порядок аргументов: (капот, ПИВОТ батареи, ТРИГГЕР батареи). Раньше были перепутаны —
+                // triggerAssemble уходил в pivot_battery (без FSM), из-за чего фикс «выскакивающей» АКБ
+                // не работал (а его вызов ASSEMBLE ещё и сбрасывал болты — «откручивал винты»).
                 GameFixes.Instance.HoodFix(transform.Find("Body/pivot_hood"),
-                                           transform.Find("MiscParts/trigger_battery"),
-                                           transform.Find("MiscParts/pivot_battery"));
+                                           transform.Find("MiscParts/pivot_battery"),
+                                           transform.Find("MiscParts/trigger_battery"));
             }
             catch (System.Exception ex)
             {

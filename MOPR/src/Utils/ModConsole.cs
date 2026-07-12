@@ -26,14 +26,26 @@ namespace MOPR
         {
             Store(message);
             if (MoprSettings.ShowLogMessagesOn)
-                MSCLoader.ModConsole.Log(message);
+                MSCLoader.ModConsole.Log(MoprColors.StyleTag(message));
         }
 
         /// <summary>Как Log, но печатается всегда (для ответов консольной команды «mopr»).</summary>
         public static void LogAlways(string message)
         {
             Store(message);
-            MSCLoader.ModConsole.Log(message);
+            MSCLoader.ModConsole.Log(MoprColors.StyleTag(message));
+        }
+
+        /// <summary>
+        /// Статусное сообщение (инициализация, проверка сервера, загрузка модулей). Печатается ВСЕГДА,
+        /// независимо от настройки «Показывать лог-сообщения» — она гейтит только подробные технические
+        /// логи (<see cref="Log"/>). Это «визуальные» строки, которые игрок ждёт при входе/загрузке.
+        /// Тег [MOPR] красится в оранжевый, тело — в бежевый (цвета из <see cref="MoprColors"/>).
+        /// </summary>
+        public static void Status(string message)
+        {
+            Store(message);
+            MSCLoader.ModConsole.Log(MoprColors.FormatStatus(message));
         }
 
         public static void LogError(string message)

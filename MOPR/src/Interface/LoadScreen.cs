@@ -21,6 +21,7 @@ namespace MOPR.Common
         private Texture2D[] frames;
         private GUIStyle titleStyle;
         private GUIStyle textStyle;
+        private GUIStyle brandStyle;
 
         private bool doDisplay;
         private float dotTimer;
@@ -41,7 +42,8 @@ namespace MOPR.Common
         private void Awake()
         {
             background = new Texture2D(1, 1);
-            background.SetPixel(0, 0, new Color(0f, 0f, 0f, 0.96f));
+            // Почти непрозрачный чёрный — сильнее затемняет сцену под загрузочным экраном.
+            background.SetPixel(0, 0, new Color(0f, 0f, 0f, 0.99f));
             background.Apply();
 
             frames = new[]
@@ -101,6 +103,11 @@ namespace MOPR.Common
             EnsureStyles();
 
             GUI.DrawTexture(new Rect(0f, 0f, Screen.width, Screen.height), background, ScaleMode.StretchToFill);
+
+            // Крупная надпись бренда сверху экрана.
+            brandStyle.fontSize = Mathf.Clamp(Mathf.RoundToInt(Screen.height * 0.06f), 28, 96);
+            GUI.Label(new Rect(0f, Screen.height * 0.10f, Screen.width, Screen.height * 0.14f),
+                "<b><color=" + MoprColors.SettingsBrand + ">MOP</color> - REVIVAL</b>", brandStyle);
 
             string caption = subtitle;
             if (animateDots)
@@ -203,6 +210,15 @@ namespace MOPR.Common
                 richText = true,
             };
             titleStyle.normal.textColor = Color.white;
+
+            brandStyle = new GUIStyle(GUI.skin.label)
+            {
+                alignment = TextAnchor.MiddleCenter,
+                fontSize = 56,
+                fontStyle = FontStyle.Bold,
+                richText = true,
+            };
+            brandStyle.normal.textColor = Color.white;
 
             textStyle = new GUIStyle(GUI.skin.label)
             {

@@ -13,6 +13,7 @@ using MOPR.Managers;
 using MOPR.Common;
 using MOPR.FSM;
 using MOPR.Items;
+using MOPR.Localization;
 
 namespace MOPR
 {
@@ -107,9 +108,61 @@ namespace MOPR
             currentControlCoroutine = ControlCoroutine();
             StartCoroutine(currentControlCoroutine);
 
-            ModConsole.Log("<color=green>[MOPR] MOD LOADED SUCCESFULLY!</color>");
+            LogLoadStatus();
+
             Resources.UnloadUnusedAssets();
             GC.Collect();
+        }
+
+        /// <summary>
+        /// Всегда видимый (не гейтится «Показывать логи») визуальный статус загрузки при входе в сейв:
+        /// ядро + состояние каждого модуля оптимизации. Подробные технические логи остаются в Log().
+        /// </summary>
+        private void LogLoadStatus()
+        {
+            ModConsole.Status("[MOPR] " + MoprColors.Success(LocalizationCore.Get("status.core_loaded")));
+
+            // Модули оптимизации: показываем состояние и число объектов под управлением.
+            LogModuleStatus("status.mod.world", worldObjectManager != null ? worldObjectManager.Count : 0, true);
+            LogModuleStatus("status.mod.vehicles", VehicleManager.Instance.Count, MoprSettings.OptimizeVehiclesOn);
+            LogModuleStatus("status.mod.items", ItemsManager.Instance.Count, MoprSettings.OptimizeItemsOn);
+            LogModuleStatus("status.mod.places", placeManager != null ? placeManager.Count : 0, MoprSettings.OptimizePlacesOn);
+
+            // Подсистемы: включено/отключено (или «применено» для разовых фиксов).
+            LogFeatureStatus("status.feat.fixes", true, FeatureWord.Applied);
+            LogFeatureStatus("status.feat.engine", MoprSettings.EnginePatchesOn);
+            LogFeatureStatus("status.feat.sector", MoprSettings.SectorCullingOn);
+            LogFeatureStatus("status.feat.ddd", MoprSettings.DynamicDrawDistanceOn);
+            LogFeatureStatus("status.feat.sleep", MoprSettings.SleepDistantBodiesOn);
+            LogFeatureStatus("status.feat.gc", MoprSettings.AdaptiveGcOn);
+            LogFeatureStatus("status.feat.saves", MoprSettings.SaveProtectionOn);
+
+            ModConsole.Status("[MOPR] " + MoprColors.Success(LocalizationCore.Get("status.ready")));
+        }
+
+        /// <summary>Строка статуса модуля: имя (акцент) + «Загружен (N)» либо приглушённое «Отключён».</summary>
+        private static void LogModuleStatus(string moduleKey, int count, bool loaded)
+        {
+            string name = LocalizationCore.Get(moduleKey);
+            if (loaded)
+                ModConsole.Status("[MOPR] " + LocalizationCore.Get("status.module_loaded", MoprColors.Accent(name), count));
+            else
+                ModConsole.Status("[MOPR] " + MoprColors.Muted(LocalizationCore.Get("status.module_off", name)));
+        }
+
+        private enum FeatureWord { OnOff, Applied }
+
+        /// <summary>Строка статуса подсистемы: имя (акцент) + цветное слово состояния.</summary>
+        private static void LogFeatureStatus(string nameKey, bool on, FeatureWord word = FeatureWord.OnOff)
+        {
+            string name = MoprColors.Accent(LocalizationCore.Get(nameKey));
+            string state = word == FeatureWord.Applied
+                ? MoprColors.Success(LocalizationCore.Get("status.word.applied"))
+                : on
+                    ? MoprColors.Success(LocalizationCore.Get("status.word.enabled"))
+                    : MoprColors.Muted(LocalizationCore.Get("status.word.disabled"));
+
+            ModConsole.Status("[MOPR] " + LocalizationCore.Get("status.feature", name, state));
         }
 
         #endregion

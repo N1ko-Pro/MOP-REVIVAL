@@ -6,6 +6,7 @@
 
 using System.Reflection;
 using MSCLoader;
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace MOPR.Interface.Helpers
@@ -77,6 +78,99 @@ namespace MOPR.Interface.Helpers
             }
             catch
             {
+            }
+        }
+
+        /// <summary>
+        /// Прячет подпись контрола (settingName) и схлопывает её строку — убирает пустой отступ
+        /// (например, у дропдауна с пустым именем). Возвращает false, если UI-элемент ещё не создан
+        /// (нужно повторить позже — MSCLoader инстанцирует элементы при открытии страницы настроек).
+        /// </summary>
+        public static bool HideLabel(ModSetting setting)
+        {
+            try
+            {
+                object element = GetSettingsElement(setting);
+                if (element == null)
+                    return false;
+
+                Text label = GetUiField<Text>(element, "settingName");
+                if (label == null)
+                    return false;
+
+                GameObject go = label.gameObject;
+
+                // Схлопываем строку: нулевая высота через LayoutElement (на случай layout-группы) и
+                // отключение объекта (исключает из компоновки родителя).
+                RectTransform rt = go.GetComponent<RectTransform>();
+                if (rt != null)
+                    rt.sizeDelta = new Vector2(rt.sizeDelta.x, 0f);
+
+                LayoutElement le = go.GetComponent<LayoutElement>();
+                if (le == null)
+                    le = go.AddComponent<LayoutElement>();
+                le.minHeight = 0f;
+                le.preferredHeight = 0f;
+
+                go.SetActive(false);
+                return true;
+            }
+            catch
+            {
+                return true; // не зацикливаемся на ошибке
+            }
+        }
+
+        /// <summary>
+        /// Размещает две кнопки на одной строке: оборачивает их в горизонтальный layout и делит ширину
+        /// поровну. Возвращает false, если UI-элементы ещё не созданы (нужно повторить позже).
+        /// </summary>
+        public static bool PairButtons(ModSetting a, ModSetting b)
+        {
+            try
+            {
+                Component ea = GetSettingsElement(a) as Component;
+                Component eb = GetSettingsElement(b) as Component;
+                if (ea == null || eb == null)
+                    return false;
+
+                RectTransform ra = ea.GetComponent<RectTransform>();
+                RectTransform rb = eb.GetComponent<RectTransform>();
+                if (ra == null || rb == null)
+                    return false;
+
+                // Уже объединены (кнопка перенесена в строку) — выходим.
+                if (ra.parent != null && ra.parent.name == "MOPR_ButtonRow")
+                    return true;
+
+                Transform content = ra.parent;
+                if (content == null)
+                    return false;
+
+                float height = Mathf.Max(ra.rect.height, 30f);
+                int index = ra.GetSiblingIndex();
+
+                GameObject rowObj = new GameObject("MOPR_ButtonRow", typeof(RectTransform));
+                RectTransform row = (RectTransform)rowObj.transform;
+                row.SetParent(content, false);
+                row.SetSiblingIndex(index);
+
+                HorizontalLayoutGroup hlg = rowObj.AddComponent<HorizontalLayoutGroup>();
+                hlg.childForceExpandWidth = true;
+                hlg.childForceExpandHeight = true;
+                hlg.spacing = 6f;
+
+                LayoutElement le = rowObj.AddComponent<LayoutElement>();
+                le.minHeight = height;
+                le.preferredHeight = height;
+
+                ra.SetParent(row, false);
+                rb.SetParent(row, false);
+                return true;
+            }
+            catch
+            {
+                return true; // не зацикливаемся на ошибке
             }
         }
 

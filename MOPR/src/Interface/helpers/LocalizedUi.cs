@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using MSCLoader;
+using MOPR.Common;
 using MOPR.Localization;
 
 namespace MOPR.Interface.Helpers
@@ -19,6 +20,12 @@ namespace MOPR.Interface.Helpers
         public static void Header(SettingsHeader header, string key)
         {
             refreshers.Add(() => SettingsReflection.SetHeaderTitle(header, LocalizationCore.Get(key)));
+        }
+
+        /// <summary>Цветной жирный подзаголовок секции с акцент-маркером (текст локализуется, цвет — из MoprColors).</summary>
+        public static void Subheader(SettingsText text, string key, string hex)
+        {
+            refreshers.Add(() => text.SetValue(MoprColors.Section(hex, MoprColors.SubheaderContent(LocalizationCore.Get(key)))));
         }
 
         public static void Label(ModSetting setting, string key)

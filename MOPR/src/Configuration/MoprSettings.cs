@@ -104,8 +104,11 @@ namespace MOPR.Common
             }
         }
 
-        /// <summary>Индекс слайдера Active Distance (0..4). До построения UI — 2 (1x).</summary>
-        public static int ActiveDistanceValue => ActiveDistance != null ? ActiveDistance.GetValue() : 2;
+        /// <summary>
+        /// Индекс дистанции (0..4). Отдельного слайдера больше нет — дистанцию задаёт ПРЕСЕТ
+        /// производительности (ModeSliderPreset). Если слайдер когда-то присутствует — берём его.
+        /// </summary>
+        public static int ActiveDistanceValue => ActiveDistance != null ? ActiveDistance.GetValue() : ModeSliderPreset;
 
         /// <summary>Множитель базовой дистанции объектов (например, 200 * 0.5 = 100).</summary>
         public static float ActiveDistanceMultiplicationValue
@@ -143,7 +146,8 @@ namespace MOPR.Common
 
         // Системные оптимизации (по умолчанию включены).
         public static bool SleepDistantBodiesOn => SleepDistantBodies == null || SleepDistantBodies.GetValue();
-        public static bool AdaptiveGcOn => AdaptiveGc == null || AdaptiveGc.GetValue();
+        // Адаптивная чистка мусора (по умолчанию ВЫКЛючена).
+        public static bool AdaptiveGcOn => AdaptiveGc != null && AdaptiveGc.GetValue();
 
         // Модули оптимизации (по умолчанию включены). Отключение оставляет соответствующие
         // объекты активными и пропускает их обработку в цикле.

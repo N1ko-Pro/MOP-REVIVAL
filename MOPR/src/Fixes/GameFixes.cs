@@ -448,11 +448,17 @@ namespace MOPR
             if (hood.gameObject.GetComponent<SatsumaCustomHoodUse>() == null)
                 hood.gameObject.AddComponent<SatsumaCustomHoodUse>();
 
-            // Фикс «выскакивающей» батареи.
+            // Фикс «выскакивающей» батареи. ASSEMBLE пересобирает АКБ, но сбрасывает затяжку её болтов
+            // (баг оригинала: «откручивает винты Сатсумы»). Поэтому сохраняем затяжку до пересборки и
+            // возвращаем после — батарея встаёт на место, а болты остаются закрученными.
             if (FsmManager.IsBatteryInstalled() && batteryPivot.parent == null)
             {
+                FsmManager.GetBatteryBolts(out float batteryBolt1, out float batteryBolt2);
+
                 batteryTrigger.gameObject.SetActive(true);
                 batteryTrigger.gameObject.GetComponent<PlayMakerFSM>().SendEvent("ASSEMBLE");
+
+                FsmManager.SetBatteryBolts(batteryBolt1, batteryBolt2);
             }
 
             HoodFixDone = true;

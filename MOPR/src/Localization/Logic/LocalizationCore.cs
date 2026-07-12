@@ -18,6 +18,15 @@ namespace MOPR.Localization
 
     internal static class LocalizationCore
     {
+        /// <summary>
+        /// Невидимый маркер «не переводить» (U+200B, zero-width space): им помечается ЛЮБАЯ строка MOPR.
+        /// Имеет нулевую ширину (не отображается) и не ломает форматирование, т.к. стоит в начале строки.
+        /// Сторонний мод-переводчик должен пропускать текст, содержащий этот символ:
+        /// <c>if (uiText.text.Contains('\u200B')) return;</c> — тогда наш UI не переводится.
+        /// Чтобы отключить пометку — поставьте пустую строку.
+        /// </summary>
+        public const string NoTranslateMarker = "\u200B";
+
         /// <summary>Текущий активный язык.</summary>
         public static Language Current = Language.English;
 
@@ -38,8 +47,14 @@ namespace MOPR.Localization
                 LanguageChanged();
         }
 
-        /// <summary>Переведённая строка для текущего языка.</summary>
+        /// <summary>Переведённая строка для текущего языка (с невидимым маркером «не переводить»).</summary>
         public static string Get(string key)
+        {
+            return NoTranslateMarker + Resolve(key);
+        }
+
+        /// <summary>Разрешает ключ по цепочке «текущий язык → английский → сам ключ».</summary>
+        private static string Resolve(string key)
         {
             Dictionary<string, string> table = Current == Language.Russian ? Russian : English;
             if (table.TryGetValue(key, out string value))

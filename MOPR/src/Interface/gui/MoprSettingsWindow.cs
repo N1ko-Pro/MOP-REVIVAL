@@ -1,8 +1,9 @@
 // MOPR — Modern Optimization Plugin (переработка мода MOP, Konrad Figura / Athlon). Revival by ANICKON. GPLv3.
 //
-// Строит окно настроек мода (панель MSCLoader) на Settings-API с локализацией. Контролы сохраняются
-// в MoprSettings. 4 профиля производительности двигают ползунок дистанции; языковой список мгновенно
-// переводит всё окно.
+// Строит окно настроек мода (панель MSCLoader) на Settings-API с локализацией. Порядок блоков и
+// подкатегорий задаётся здесь. Цвета подзаголовков берутся из MoprColors. Контролы сохраняются в
+// MoprSettings. Пресет производительности напрямую задаёт дистанцию прорисовки (отдельного слайдера
+// больше нет). Языковой список мгновенно переводит всё окно.
 
 using MSCLoader;
 using MOPR.Common;
@@ -15,7 +16,7 @@ namespace MOPR.Interface.Gui
 {
     internal static class MoprSettingsWindow
     {
-        // Ползунок двигается по профилю только после загрузки настроек — иначе первичный клик сбивает значение.
+        // Ползунок/пресет реагирует только после загрузки настроек — иначе первичный клик сбивает значение.
         private static bool settingsInteractive;
 
         /// <summary>Строит всю панель настроек на сохранённом языке.</summary>
@@ -23,17 +24,19 @@ namespace MOPR.Interface.Gui
         {
             LocalizationConfig.Initialize(mod);
             LocalizedUi.Clear();
+            SettingsUiPatcher.Clear();
             settingsInteractive = false;
 
-            BuildLanguage();
-            BuildOptimization();
-            BuildGraphics();
-            BuildGame();
-            BuildFixes();
-            BuildSaves();
-            BuildRulesServer();
-            BuildDiagnostics();
-            BuildInfo(mod);
+            BuildInfo(mod);        // 1. Информация
+            BuildLanguage();       // 2. Язык
+            BuildPerformance();    // 3. Быстродействие (пресет + прочее)
+            BuildOptimization();   // 4. Оптимизация (базовые / продвинутые / графические)
+            BuildGraphics();       // 5. Графика (тени / частота кадров)
+            BuildGame();           // 6. Игра
+            BuildFixes();          // 7. Исправления
+            BuildSaves();          // 8. Защита сохранений
+            BuildRulesServer();    // 9. Сервер правил
+            BuildDiagnostics();    // 10. Отладка (+ аварийный режим)
         }
 
         /// <summary>После загрузки настроек: применяет графику и разрешает пресеты.</summary>
@@ -45,19 +48,38 @@ namespace MOPR.Interface.Gui
 
         #region Секции
 
-        private static void BuildLanguage()
+        private static void BuildInfo(Mod mod)
         {
-            Settings.AddHeader(LocalizationCore.Get("settings.language"));
-            MoprSettings.Language = Settings.AddDropDownList(
-                "mopr_language", " ",
-                new[] { "English", "Русский" }, (int)LocalizationCore.Current, OnLanguageChanged);
+            // Заголовок «Информация» — чёрный фон, жёлтый текст.
+            LocalizedUi.Header(
+                Settings.AddHeader(LocalizationCore.Get("settings.info_header"), MoprColors.HeaderInfoBackground, MoprColors.HeaderTitleText),
+                "settings.info_header");
+            SettingsText info = Settings.AddText(LocalizationCore.Get("settings.info", mod.Version, mod.Author));
+            LocalizedUi.TextArgs(info, "settings.info", () => new object[] { mod.Version, mod.Author });
         }
 
-        private static void BuildOptimization()
+        private static void BuildLanguage()
         {
-            LocalizedUi.Header(Settings.AddHeader(LocalizationCore.Get("settings.despawn_header")), "settings.despawn_header");
-            LocalizedUi.Text(Settings.AddText(LocalizationCore.Get("settings.mode_header")), "settings.mode_header");
+            // Заголовок «Язык» — зелёный фон, жёлтый текст.
+            LocalizedUi.Header(
+                Settings.AddHeader(LocalizationCore.Get("settings.language"), MoprColors.HeaderLanguageBackground, MoprColors.HeaderTitleText),
+                "settings.language");
 
+            MoprSettings.Language = Settings.AddDropDownList(
+                "mopr_language", "",
+                new[] { "English", "Русский" }, (int)LocalizationCore.Current, OnLanguageChanged);
+
+            // Прячем пустую подпись дропдауна — убирает лишний отступ над списком. Делаем отложенно:
+            // MSCLoader создаёт UI-элемент только при открытии страницы настроек.
+            SettingsUiPatcher.HideLabelWhenReady(MoprSettings.Language);
+        }
+
+        private static void BuildPerformance()
+        {
+            LocalizedUi.Header(Settings.AddHeader(LocalizationCore.Get("settings.perf_header")), "settings.perf_header");
+
+            // Пресет производительности (радиогруппа). Он же задаёт дистанцию прорисовки.
+            Subheader("settings.mode_header", MoprColors.SettingsHeader);
             MoprSettings.ModeUltra = Settings.AddCheckBoxGroup("mopr_mode_ultra", LocalizationCore.Get("settings.mode.ultra"), false, "mopr_mode", OnModeChanged);
             LocalizedUi.Label(MoprSettings.ModeUltra, "settings.mode.ultra");
             MoprSettings.ModeQuality = Settings.AddCheckBoxGroup("mopr_mode_quality", LocalizationCore.Get("settings.mode.quality"), false, "mopr_mode", OnModeChanged);
@@ -67,8 +89,25 @@ namespace MOPR.Interface.Gui
             MoprSettings.ModePerformance = Settings.AddCheckBoxGroup("mopr_mode_perf", LocalizationCore.Get("settings.mode.performance"), false, "mopr_mode", OnModeChanged);
             LocalizedUi.Label(MoprSettings.ModePerformance, "settings.mode.performance");
 
-            // Пер-модульные тумблеры оптимизации (по умолчанию включены).
-            LocalizedUi.Text(Settings.AddText(LocalizationCore.Get("settings.subsystems_header")), "settings.subsystems_header");
+            Spacer();
+
+            // Прочее: две взаимоисключающие опции обработки пустых бутылок.
+            Subheader("settings.other_header", MoprColors.SettingsHeaderOther);
+            MoprSettings.DisableEmptyItems = Settings.AddCheckBox("mopr_disable_empty_items", LocalizationCore.Get("settings.disable_empty_items"), false, OnDisableEmptyChanged);
+            LocalizedUi.Label(MoprSettings.DisableEmptyItems, "settings.disable_empty_items");
+            LocalizedUi.Text(Settings.AddText(LocalizationCore.Get("settings.disable_empty_items_hint")), "settings.disable_empty_items_hint");
+
+            MoprSettings.DestroyEmptyBottles = Settings.AddCheckBox("mopr_destroy_empty_bottles", LocalizationCore.Get("settings.destroy_empty_bottles"), false, OnDestroyBottlesChanged);
+            LocalizedUi.Label(MoprSettings.DestroyEmptyBottles, "settings.destroy_empty_bottles");
+            LocalizedUi.Text(Settings.AddText(LocalizationCore.Get("settings.destroy_empty_bottles_hint")), "settings.destroy_empty_bottles_hint");
+        }
+
+        private static void BuildOptimization()
+        {
+            LocalizedUi.Header(Settings.AddHeader(LocalizationCore.Get("settings.despawn_header")), "settings.despawn_header");
+
+            // Базовые модули оптимизации.
+            Subheader("settings.opt_basic", MoprColors.SettingsHeader);
             MoprSettings.OptimizeItems = Settings.AddCheckBox("mopr_opt_items", LocalizationCore.Get("settings.optimize_items"), true);
             LocalizedUi.Label(MoprSettings.OptimizeItems, "settings.optimize_items");
             MoprSettings.OptimizePlaces = Settings.AddCheckBox("mopr_opt_places", LocalizationCore.Get("settings.optimize_places"), true);
@@ -76,18 +115,33 @@ namespace MOPR.Interface.Gui
             MoprSettings.OptimizeVehicles = Settings.AddCheckBox("mopr_opt_vehicles", LocalizationCore.Get("settings.optimize_vehicles"), true);
             LocalizedUi.Label(MoprSettings.OptimizeVehicles, "settings.optimize_vehicles");
 
-            MoprSettings.ActiveDistance = Settings.AddSlider(
-                "mopr_active_distance", LocalizationCore.Get("settings.active_distance"),
-                0, 4, 2, textValues: BuildDistanceLabels());
-            LocalizedUi.Label(MoprSettings.ActiveDistance, "settings.active_distance");
-            LocalizedUi.DistanceSlider(MoprSettings.ActiveDistance, BuildDistanceLabels);
+            Spacer();
 
-            MoprSettings.Description = Settings.AddText(LocalizationCore.Get("settings.desc"));
-            LocalizedUi.Text(MoprSettings.Description, "settings.desc");
-
+            // Продвинутые оптимизации.
+            Subheader("settings.opt_advanced", MoprColors.SettingsHeader);
             MoprSettings.SatsumaDrivingMode = Settings.AddCheckBox("mopr_satsuma_driving", LocalizationCore.Get("settings.satsuma_driving"), true);
             LocalizedUi.Label(MoprSettings.SatsumaDrivingMode, "settings.satsuma_driving");
             LocalizedUi.Text(Settings.AddText(LocalizationCore.Get("settings.satsuma_driving_hint")), "settings.satsuma_driving_hint");
+
+            MoprSettings.EnginePatches = Settings.AddCheckBox("mopr_engine_patches", LocalizationCore.Get("settings.engine_patches"), true);
+            LocalizedUi.Label(MoprSettings.EnginePatches, "settings.engine_patches");
+            LocalizedUi.Text(Settings.AddText(LocalizationCore.Get("settings.engine_patches_hint")), "settings.engine_patches_hint");
+
+            MoprSettings.SleepDistantBodies = Settings.AddCheckBox("mopr_sleep_bodies", LocalizationCore.Get("settings.sleep_bodies"), true);
+            LocalizedUi.Label(MoprSettings.SleepDistantBodies, "settings.sleep_bodies");
+            LocalizedUi.Text(Settings.AddText(LocalizationCore.Get("settings.sleep_bodies_hint")), "settings.sleep_bodies_hint");
+
+            Spacer();
+
+            // Графические оптимизации.
+            Subheader("settings.opt_graphics", MoprColors.SettingsHeader);
+            MoprSettings.DynamicDrawDistanceEnabled = Settings.AddCheckBox("mopr_ddd", LocalizationCore.Get("settings.dynamic_draw"), true);
+            LocalizedUi.Label(MoprSettings.DynamicDrawDistanceEnabled, "settings.dynamic_draw");
+            LocalizedUi.Text(Settings.AddText(LocalizationCore.Get("settings.dynamic_draw_hint")), "settings.dynamic_draw_hint");
+
+            MoprSettings.SectorCulling = Settings.AddCheckBox("mopr_sector_cull", LocalizationCore.Get("settings.sector_cull"), true);
+            LocalizedUi.Label(MoprSettings.SectorCulling, "settings.sector_cull");
+            LocalizedUi.Text(Settings.AddText(LocalizationCore.Get("settings.sector_cull_hint")), "settings.sector_cull_hint");
         }
 
         private static void BuildGraphics()
@@ -99,36 +153,22 @@ namespace MOPR.Interface.Gui
             MoprSettings.ShadowDistance = Settings.AddSlider("mopr_shadow_distance", LocalizationCore.Get("settings.shadow_distance"), 0, 2000, 200, ApplyGraphics);
             LocalizedUi.Label(MoprSettings.ShadowDistance, "settings.shadow_distance");
 
-            MoprSettings.DynamicDrawDistanceEnabled = Settings.AddCheckBox("mopr_ddd", LocalizationCore.Get("settings.dynamic_draw"), true);
-            LocalizedUi.Label(MoprSettings.DynamicDrawDistanceEnabled, "settings.dynamic_draw");
-            LocalizedUi.Text(Settings.AddText(LocalizationCore.Get("settings.dynamic_draw_hint")), "settings.dynamic_draw_hint");
+            Spacer();
 
-            MoprSettings.SectorCulling = Settings.AddCheckBox("mopr_sector_cull", LocalizationCore.Get("settings.sector_cull"), true);
-            LocalizedUi.Label(MoprSettings.SectorCulling, "settings.sector_cull");
-            LocalizedUi.Text(Settings.AddText(LocalizationCore.Get("settings.sector_cull_hint")), "settings.sector_cull_hint");
-
-            MoprSettings.EnginePatches = Settings.AddCheckBox("mopr_engine_patches", LocalizationCore.Get("settings.engine_patches"), true);
-            LocalizedUi.Label(MoprSettings.EnginePatches, "settings.engine_patches");
-            LocalizedUi.Text(Settings.AddText(LocalizationCore.Get("settings.engine_patches_hint")), "settings.engine_patches_hint");
+            MoprSettings.LimitFramerate = Settings.AddCheckBox("mopr_limit_fps", LocalizationCore.Get("settings.limit_fps"), false, ApplyGraphics);
+            LocalizedUi.Label(MoprSettings.LimitFramerate, "settings.limit_fps");
+            MoprSettings.FramerateLimit = Settings.AddSlider("mopr_fps_limit", LocalizationCore.Get("settings.fps_limit"), 20, 200, 60, ApplyGraphics);
+            LocalizedUi.Label(MoprSettings.FramerateLimit, "settings.fps_limit");
         }
 
         private static void BuildGame()
         {
             LocalizedUi.Header(Settings.AddHeader(LocalizationCore.Get("settings.game_header")), "settings.game_header");
 
-            MoprSettings.LimitFramerate = Settings.AddCheckBox("mopr_limit_fps", LocalizationCore.Get("settings.limit_fps"), false, ApplyGraphics);
-            LocalizedUi.Label(MoprSettings.LimitFramerate, "settings.limit_fps");
-            MoprSettings.FramerateLimit = Settings.AddSlider("mopr_fps_limit", LocalizationCore.Get("settings.fps_limit"), 20, 200, 60, ApplyGraphics);
-            LocalizedUi.Label(MoprSettings.FramerateLimit, "settings.fps_limit");
-
             MoprSettings.RunInBackground = Settings.AddCheckBox("mopr_run_background", LocalizationCore.Get("settings.run_background"), true, ApplyGraphics);
             LocalizedUi.Label(MoprSettings.RunInBackground, "settings.run_background");
 
-            MoprSettings.SleepDistantBodies = Settings.AddCheckBox("mopr_sleep_bodies", LocalizationCore.Get("settings.sleep_bodies"), true);
-            LocalizedUi.Label(MoprSettings.SleepDistantBodies, "settings.sleep_bodies");
-            LocalizedUi.Text(Settings.AddText(LocalizationCore.Get("settings.sleep_bodies_hint")), "settings.sleep_bodies_hint");
-
-            MoprSettings.AdaptiveGc = Settings.AddCheckBox("mopr_adaptive_gc", LocalizationCore.Get("settings.gc_adaptive"), true);
+            MoprSettings.AdaptiveGc = Settings.AddCheckBox("mopr_adaptive_gc", LocalizationCore.Get("settings.gc_adaptive"), false);
             LocalizedUi.Label(MoprSettings.AdaptiveGc, "settings.gc_adaptive");
             LocalizedUi.Text(Settings.AddText(LocalizationCore.Get("settings.gc_adaptive_hint")), "settings.gc_adaptive_hint");
         }
@@ -137,25 +177,17 @@ namespace MOPR.Interface.Gui
         {
             LocalizedUi.Header(Settings.AddHeader(LocalizationCore.Get("settings.fixes_header")), "settings.fixes_header");
 
-            MoprSettings.DisableSkidmarks = Settings.AddCheckBox("mopr_disable_skidmarks", LocalizationCore.Get("settings.disable_skidmarks"), false);
-            LocalizedUi.Label(MoprSettings.DisableSkidmarks, "settings.disable_skidmarks");
-            LocalizedUi.Text(Settings.AddText(LocalizationCore.Get("settings.disable_skidmarks_hint")), "settings.disable_skidmarks_hint");
-
-            MoprSettings.DisableEmptyItems = Settings.AddCheckBox("mopr_disable_empty_items", LocalizationCore.Get("settings.disable_empty_items"), false);
-            LocalizedUi.Label(MoprSettings.DisableEmptyItems, "settings.disable_empty_items");
-            LocalizedUi.Text(Settings.AddText(LocalizationCore.Get("settings.disable_empty_items_hint")), "settings.disable_empty_items_hint");
-
-            MoprSettings.DestroyEmptyBottles = Settings.AddCheckBox("mopr_destroy_empty_bottles", LocalizationCore.Get("settings.destroy_empty_bottles"), false);
-            LocalizedUi.Label(MoprSettings.DestroyEmptyBottles, "settings.destroy_empty_bottles");
-            LocalizedUi.Text(Settings.AddText(LocalizationCore.Get("settings.destroy_empty_bottles_hint")), "settings.destroy_empty_bottles_hint");
+            MoprSettings.ParkingBrakeAnchor = Settings.AddCheckBox("mopr_parking_brake_anchor", LocalizationCore.Get("settings.parking_brake_anchor"), true);
+            LocalizedUi.Label(MoprSettings.ParkingBrakeAnchor, "settings.parking_brake_anchor");
+            LocalizedUi.Text(Settings.AddText(LocalizationCore.Get("settings.parking_brake_anchor_hint")), "settings.parking_brake_anchor_hint");
 
             MoprSettings.HideLakeVegetation = Settings.AddCheckBox("mopr_fix_lake_weed", LocalizationCore.Get("settings.fix_lake_weed"), false);
             LocalizedUi.Label(MoprSettings.HideLakeVegetation, "settings.fix_lake_weed");
             LocalizedUi.Text(Settings.AddText(LocalizationCore.Get("settings.fix_lake_weed_hint")), "settings.fix_lake_weed_hint");
 
-            MoprSettings.ParkingBrakeAnchor = Settings.AddCheckBox("mopr_parking_brake_anchor", LocalizationCore.Get("settings.parking_brake_anchor"), true);
-            LocalizedUi.Label(MoprSettings.ParkingBrakeAnchor, "settings.parking_brake_anchor");
-            LocalizedUi.Text(Settings.AddText(LocalizationCore.Get("settings.parking_brake_anchor_hint")), "settings.parking_brake_anchor_hint");
+            MoprSettings.DisableSkidmarks = Settings.AddCheckBox("mopr_disable_skidmarks", LocalizationCore.Get("settings.disable_skidmarks"), false);
+            LocalizedUi.Label(MoprSettings.DisableSkidmarks, "settings.disable_skidmarks");
+            LocalizedUi.Text(Settings.AddText(LocalizationCore.Get("settings.disable_skidmarks_hint")), "settings.disable_skidmarks_hint");
         }
 
         private static void BuildSaves()
@@ -166,10 +198,6 @@ namespace MOPR.Interface.Gui
             LocalizedUi.Label(MoprSettings.SaveProtect, "settings.save_protect");
             LocalizedUi.Text(Settings.AddText(LocalizationCore.Get("settings.save_protect_hint")), "settings.save_protect_hint");
 
-            MoprSettings.SaveBackup = Settings.AddCheckBox("mopr_save_backup", LocalizationCore.Get("settings.save_backup"), true);
-            LocalizedUi.Label(MoprSettings.SaveBackup, "settings.save_backup");
-            LocalizedUi.Text(Settings.AddText(LocalizationCore.Get("settings.save_backup_hint")), "settings.save_backup_hint");
-
             MoprSettings.SaveVerify = Settings.AddCheckBox("mopr_save_verify", LocalizationCore.Get("settings.save_verify"), true);
             LocalizedUi.Label(MoprSettings.SaveVerify, "settings.save_verify");
             LocalizedUi.Text(Settings.AddText(LocalizationCore.Get("settings.save_verify_hint")), "settings.save_verify_hint");
@@ -178,8 +206,15 @@ namespace MOPR.Interface.Gui
             LocalizedUi.Label(MoprSettings.RestoreBolts, "settings.restore_bolts");
             LocalizedUi.Text(Settings.AddText(LocalizationCore.Get("settings.restore_bolts_hint")), "settings.restore_bolts_hint");
 
-            Settings.AddButton(LocalizationCore.Get("settings.backup_now"), OnBackupNow, true);
-            Settings.AddButton(LocalizationCore.Get("settings.restore_latest"), OnRestoreLatest, true);
+            MoprSettings.SaveBackup = Settings.AddCheckBox("mopr_save_backup", LocalizationCore.Get("settings.save_backup"), true);
+            LocalizedUi.Label(MoprSettings.SaveBackup, "settings.save_backup");
+            LocalizedUi.Text(Settings.AddText(LocalizationCore.Get("settings.save_backup_hint")), "settings.save_backup_hint");
+
+            SettingsButton backupNow = Settings.AddButton(LocalizationCore.Get("settings.backup_now"), OnBackupNow, true);
+            LocalizedUi.Button(backupNow, "settings.backup_now");
+            SettingsButton restoreLatest = Settings.AddButton(LocalizationCore.Get("settings.restore_latest"), OnRestoreLatest, true);
+            LocalizedUi.Button(restoreLatest, "settings.restore_latest");
+            SettingsUiPatcher.PairButtonsWhenReady(backupNow, restoreLatest);
         }
 
         private static void BuildRulesServer()
@@ -189,8 +224,11 @@ namespace MOPR.Interface.Gui
             SettingsText status = Settings.AddText(LocalizationCore.Get(RemoteRuleSync.StatusKey));
             LocalizedUi.DynamicText(status, () => RemoteRuleSync.StatusKey);
 
-            Settings.AddButton(LocalizationCore.Get("settings.rules_refresh"), OnRefreshRules, true);
-            Settings.AddButton(LocalizationCore.Get("settings.rules_open_site"), OnOpenRulesSite, true);
+            SettingsButton refresh = Settings.AddButton(LocalizationCore.Get("settings.rules_refresh"), OnRefreshRules, true);
+            LocalizedUi.Button(refresh, "settings.rules_refresh");
+            SettingsButton openSite = Settings.AddButton(LocalizationCore.Get("settings.rules_open_site"), OnOpenRulesSite, true);
+            LocalizedUi.Button(openSite, "settings.rules_open_site");
+            SettingsUiPatcher.PairButtonsWhenReady(refresh, openSite);
         }
 
         private static void BuildDiagnostics()
@@ -205,17 +243,30 @@ namespace MOPR.Interface.Gui
             LocalizedUi.Label(MoprSettings.ShowLogMessages, "settings.show_log");
             LocalizedUi.Text(Settings.AddText(LocalizationCore.Get("settings.show_log_hint")), "settings.show_log_hint");
 
-            LocalizedUi.Text(Settings.AddText(LocalizationCore.Get("settings.emergency_header")), "settings.emergency_header");
+            Spacer();
+
+            // Аварийный режим.
+            Subheader("settings.emergency_header", MoprColors.SettingsEmergency);
             MoprSettings.DisableOptimization = Settings.AddCheckBox("mopr_disable_opt", LocalizationCore.Get("settings.disable_opt"), false, OnDisableOptimizationChanged);
             LocalizedUi.Label(MoprSettings.DisableOptimization, "settings.disable_opt");
             LocalizedUi.Text(Settings.AddText(LocalizationCore.Get("settings.disable_opt_hint")), "settings.disable_opt_hint");
         }
 
-        private static void BuildInfo(Mod mod)
+        #endregion
+
+        #region Хелперы разметки
+
+        /// <summary>Цветной жирный подзаголовок подкатегории с акцент-маркером (цвет из MoprColors).</summary>
+        private static void Subheader(string key, string hex)
         {
-            LocalizedUi.Header(Settings.AddHeader(LocalizationCore.Get("settings.info_header")), "settings.info_header");
-            SettingsText info = Settings.AddText(LocalizationCore.Get("settings.info", mod.Version, mod.Author));
-            LocalizedUi.TextArgs(info, "settings.info", () => new object[] { mod.Version, mod.Author });
+            SettingsText text = Settings.AddText(MoprColors.Section(hex, MoprColors.SubheaderContent(LocalizationCore.Get(key))));
+            LocalizedUi.Subheader(text, key, hex);
+        }
+
+        /// <summary>Пустой отступ между подкатегориями.</summary>
+        private static void Spacer()
+        {
+            Settings.AddText(" ");
         }
 
         #endregion
@@ -230,13 +281,27 @@ namespace MOPR.Interface.Gui
             LocalizedUi.RefreshAll();
         }
 
-        /// <summary>Выбор профиля двигает ползунок дистанции.</summary>
+        /// <summary>Пресет задаёт дистанцию через MoprSettings.ActiveDistanceValue; слайдер убран.</summary>
         private static void OnModeChanged()
         {
+            // Двигаем слайдер дистанции, только если он существует (сейчас его нет — no-op).
             if (!settingsInteractive || MoprSettings.ActiveDistance == null)
                 return;
 
             SettingsReflection.MoveSlider(MoprSettings.ActiveDistance, MoprSettings.ModeSliderPreset);
+        }
+
+        /// <summary>«Отключать пустые бутылки» и «Уничтожать пустые бутылки» взаимоисключаемы.</summary>
+        private static void OnDisableEmptyChanged()
+        {
+            if (MoprSettings.DisableEmptyItemsOn && MoprSettings.DestroyEmptyBottles != null && MoprSettings.DestroyEmptyBottlesOn)
+                SettingsReflection.SetToggle(MoprSettings.DestroyEmptyBottles, false);
+        }
+
+        private static void OnDestroyBottlesChanged()
+        {
+            if (MoprSettings.DestroyEmptyBottlesOn && MoprSettings.DisableEmptyItems != null && MoprSettings.DisableEmptyItemsOn)
+                SettingsReflection.SetToggle(MoprSettings.DisableEmptyItems, false);
         }
 
         private static void OnBackupNow()
@@ -290,18 +355,6 @@ namespace MOPR.Interface.Gui
             MoprSettings.UpdateShadows();
             MoprSettings.UpdateFramerateLimiter();
             MoprSettings.ToggleBackgroundRunning();
-        }
-
-        private static string[] BuildDistanceLabels()
-        {
-            return new[]
-            {
-                LocalizationCore.Get("settings.dist.0"),
-                LocalizationCore.Get("settings.dist.1"),
-                LocalizationCore.Get("settings.dist.2"),
-                LocalizationCore.Get("settings.dist.3"),
-                LocalizationCore.Get("settings.dist.4"),
-            };
         }
 
         #endregion
