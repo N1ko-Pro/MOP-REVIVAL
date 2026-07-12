@@ -360,9 +360,35 @@ export function validateModId(id) {
   return { ok: true, id: trimmed, message: '' };
 }
 
-/** Builds a GitHub "new file" URL that opens a prefilled PR for a rule file. */
+// Machine-readable marker the submission workflow looks for in an issue body.
+// It also carries the validated mod ID so the automation never has to guess it.
+export const SUBMISSION_MARKER = 'mopr-rule-submission';
+
+/**
+ * Builds the issue body a submission opens. The GitHub Action
+ * (.github/workflows/rule-submission.yml) reads the `id=` from the marker and
+ * the fenced ```mopconfig block, validates it and opens a pull request.
+ */
+export function buildSubmissionBody(modId, content) {
+  const clean = String(content).replace(/```/g, '').replace(/\s+$/, '');
+  return (
+    `<!-- ${SUBMISSION_MARKER} id=${modId} -->\n` +
+    `Submitted from the MOP - REVIVAL rule builder — please don't edit the block below by hand.\n\n` +
+    `**Mod ID:** \`${modId}\`\n\n` +
+    '```mopconfig\n' +
+    clean +
+    '\n```\n\n' +
+    `_Automation validates this and opens a pull request; a maintainer reviews it before it goes live._`
+  );
+}
+
+/**
+ * Builds a GitHub "new issue" URL prefilled with the rule. Opening an issue
+ * needs only a free GitHub account — no fork, no pull request from the author.
+ * The submission workflow turns the issue into a validated pull request.
+ */
 export function buildSubmitUrl(modId, content) {
-  const filename = `${RULES_PATH}/${modId}.mopconfig`;
-  const params = new URLSearchParams({ filename, value: content });
-  return `https://github.com/${REPO}/new/main?${params.toString()}`;
+  const title = `Rule submission: ${modId}.mopconfig`;
+  const params = new URLSearchParams({ title, body: buildSubmissionBody(modId, content) });
+  return `https://github.com/${REPO}/issues/new?${params.toString()}`;
 }

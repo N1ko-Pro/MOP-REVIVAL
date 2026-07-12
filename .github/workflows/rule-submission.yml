@@ -1,0 +1,84 @@
+name: Rule submission
+
+# Turns a prefilled "rule submission" issue (opened from the website rule
+# builder) into a validated pull request. Authors only need a free GitHub
+# account — no fork, no manual pull request.
+
+on:
+  issues:
+    types: [opened, edited]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: rule-submission-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  process:
+    # Only act on issues that carry the machine-readable submission marker.
+    if: contains(github.event.issue.body, 'mopr-rule-submission')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Validate submission and write rule file
+        id: build
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: node Server/scripts/process-issue.mjs
+
+      - name: Comment on invalid submission
+        if: steps.build.outputs.status == 'invalid'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE: ${{ github.event.issue.number }}
+          MESSAGE: ${{ steps.build.outputs.message }}
+        run: |
+          gh issue comment "$ISSUE" --body "$(printf '❌ Automatic check failed:\n\n%s\n\nFix it in the rule builder on the website and edit this issue — the check runs again automatically.' "$MESSAGE")"
+
+      - name: Open pull request
+        if: steps.build.outputs.status == 'ok'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE: ${{ github.event.issue.number }}
+          ID: ${{ steps.build.outputs.id }}
+          FILE: ${{ steps.build.outputs.path }}
+        run: |
+          set -euo pipefail
+          BRANCH="rule/${ID}-issue-${ISSUE}"
+
+          git config user.name "mopr-bot"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git add "$FILE"
+
+          if git diff --cached --quiet; then
+            echo "No content change for $FILE — nothing to submit."
+            gh issue comment "$ISSUE" --body "ℹ️ This rule matches what's already in the database, so there's nothing to change."
+            exit 0
+          fi
+
+          git commit -m "Add rule ${ID}.mopconfig (from #${ISSUE})"
+          git push -f origin "$BRANCH"
+
+          EXISTING=$(gh pr list --head "$BRANCH" --state open --json url --jq '.[0].url // ""')
+          if [ -n "$EXISTING" ]; then
+            echo "Pull request already open: $EXISTING"
+            exit 0
+          fi
+
+          PR_URL=$(gh pr create \
+            --base main \
+            --head "$BRANCH" \
+            --title "Rule: ${ID}.mopconfig" \
+            --body "$(printf 'Automated from #%s.\n\nValidated by the submission workflow. Closes #%s.' "$ISSUE" "$ISSUE")")
+
+          gh issue comment "$ISSUE" --body "$(printf '✅ Validated and opened a pull request: %s\n\nA maintainer will review and merge it. Thanks for contributing!' "$PR_URL")"

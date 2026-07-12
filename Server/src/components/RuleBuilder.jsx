@@ -3,6 +3,7 @@ import {
   BUILDER_ACTIONS,
   TOGGLE_MODES,
   MOP_VERSION,
+  REPO,
   buildRuleText,
   parseRuleFile,
   validateModId,
@@ -74,16 +75,17 @@ export default function RuleBuilder() {
     URL.revokeObjectURL(url);
   }
 
-  // Opening the prefilled GitHub "new file" page. Using window.open() with a
-  // features string ('noopener') makes some browsers treat the call as a popup
-  // and block it; a synthetic anchor click is far more reliable and keeps the
-  // opener detached via rel. If the prefill URL is too long for GitHub to
-  // accept, fall back to an empty new-file page and copy the rule to clipboard.
+  // Opens a prefilled GitHub *issue* — anyone with a free account can do this
+  // without forking; a workflow validates it and opens the pull request. Using
+  // window.open() with a features string ('noopener') makes some browsers treat
+  // the call as a popup and block it, so a synthetic anchor click is used
+  // instead. If the prefill is too long for GitHub, open a blank new-issue page
+  // and copy the rule to the clipboard so the author can paste it.
   function submit() {
     if (!canSubmit) return;
     const full = buildSubmitUrl(idCheck.id, text);
-    const tooLong = full.length > 8000;
-    const url = tooLong ? buildSubmitUrl(idCheck.id, '') : full;
+    const tooLong = full.length > 7000;
+    const url = tooLong ? `https://github.com/${REPO}/issues/new` : full;
     if (tooLong) navigator.clipboard?.writeText(text).catch(() => {});
     const a = document.createElement('a');
     a.href = url;
