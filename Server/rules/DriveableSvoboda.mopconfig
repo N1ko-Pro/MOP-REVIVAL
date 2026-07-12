@@ -1,0 +1,10 @@
+# DriveableSvoboda.mopconfig
+# Leave the "Driveable Svoboda" mod completely alone.
+min_ver: 4.0.0
+
+# The driveable car itself: never enable/disable it and never build a distant stand-in.
+ignore: SVOBODA(855kg) fullignore
+
+# Its wheel covers spawn as pickable items ("hubcap" is on MOP's item whitelist),
+# so the scanner would otherwise manage them - keep MOP off them entirely.
+ignore: svoboda%20hubcap(Clone) fullignore
