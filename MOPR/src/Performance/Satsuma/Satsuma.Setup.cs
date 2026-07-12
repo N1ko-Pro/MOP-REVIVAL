@@ -580,6 +580,19 @@ namespace MOPR.Vehicles.Cases
             }
         }
 
+        /// <summary>Якорь ручника: не даёт машине сползать по уклону с поднятым ручником (домкрат не мешает).</summary>
+        private void SetupParkingBrakeAnchor()
+        {
+            try
+            {
+                gameObject.AddComponent<SatsumaParkingBrakeAnchor>();
+            }
+            catch (System.Exception ex)
+            {
+                ExceptionManager.New(ex, false, "SATSUMA_PARKING_BRAKE_ANCHOR_ERROR");
+            }
+        }
+
         /// <summary>Навешивает SatsumaBoltsAntiReload на болты Сатсумы, чтобы их затяжка не сбрасывалась.</summary>
         private void BoltsFix()
         {

@@ -162,7 +162,15 @@ namespace MOPR.Items
 
             // Спящее тело делаем кинематическим — не считаем его физику (не во время settle и только
             // для предметов, которые сейчас гасятся/выгружаются; активные близкие детали не трогаем).
-            if (freezeSleepers && !settling && rb.IsSleeping() && !rb.isKinematic && !CompatibilityManager.IsInBackpack(this))
+            //
+            // НО: hard-guard-предметы (детали Сатсумы — двери/капот/багажник, поднятый домкрат, батарея
+            // на зарядке и т.д.) должны оставаться интерактивными и НЕ замораживаются. Иначе их тела
+            // застревают кинематическими: Suspend() для них пропущен (HardGuardKeepsActive), а обратный
+            // сброс кинематики был только в ветке Full режима ToggleChangeFix — для PhysicsOnly-деталей
+            // (двери/капот/багажник) он не срабатывал, и после дальнего отъезда/телепорта они переставали
+            // открываться, а сама машина «зависала» (кинематические дети через суставы держат кузов).
+            if (freezeSleepers && !settling && rb.IsSleeping() && !rb.isKinematic
+                && !CompatibilityManager.IsInBackpack(this) && !HardGuardKeepsActive())
                 rb.isKinematic = true;
         }
 

@@ -59,7 +59,10 @@ namespace MOPR.Common
         public static SettingsSliderInt ShadowDistance, FramerateLimit;
 
         // Исправления / прочее.
-        public static SettingsCheckBox DisableSkidmarks, DisableEmptyItems, DestroyEmptyBottles, HideLakeVegetation, ParkingBrakeAnchor;
+        public static SettingsCheckBox DisableSkidmarks, DisableEmptyItems, DestroyEmptyBottles, HideLakeVegetation;
+
+        // Якорь ручника Сатсумы (не даёт сползать по уклону; домкрату не мешает).
+        public static SettingsCheckBox ParkingBrakeAnchor;
 
         // Отладка / аварийный режим.
         public static SettingsCheckBox ShowOverlay, ShowLogMessages, DisableOptimization;
@@ -152,7 +155,9 @@ namespace MOPR.Common
         public static bool DisableEmptyItemsOn => DisableEmptyItems != null && DisableEmptyItems.GetValue();
         public static bool DestroyEmptyBottlesOn => DestroyEmptyBottles != null && DestroyEmptyBottles.GetValue();
         public static bool HideLakeVegetationOn => HideLakeVegetation != null && HideLakeVegetation.GetValue();
-        public static bool ParkingBrakeAnchorOn => ParkingBrakeAnchor != null && ParkingBrakeAnchor.GetValue();
+
+        // Якорь ручника (по умолчанию включён).
+        public static bool ParkingBrakeAnchorOn => ParkingBrakeAnchor == null || ParkingBrakeAnchor.GetValue();
 
         public static bool ShowOverlayOn => ShowOverlay != null && ShowOverlay.GetValue();
         public static bool ShowLogMessagesOn => ShowLogMessages != null && ShowLogMessages.GetValue();

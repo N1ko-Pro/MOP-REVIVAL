@@ -153,7 +153,6 @@ namespace MOPR
             CompatibilityManager.Initialize();
             mop.AddComponent<Core>();
             mop.AddComponent<Fixes.LakeVegetationFix>();
-            mop.AddComponent<Fixes.SatsumaParkingBrakeAnchor>();
             SaveManager.AddSaveFlag();
         }
 

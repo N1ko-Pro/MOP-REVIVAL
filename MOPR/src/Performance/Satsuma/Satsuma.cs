@@ -153,6 +153,7 @@ namespace MOPR.Vehicles.Cases
             SetupBlockHinge();
             SetupDriverHeadHinge();
             SetupDrivingOptimizer();
+            SetupParkingBrakeAnchor();
 
             if (IsActive)
                 ForceToggleUnityCar(false);

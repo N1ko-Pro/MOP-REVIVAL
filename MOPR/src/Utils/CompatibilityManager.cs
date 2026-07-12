@@ -29,8 +29,7 @@ namespace MOPR.Common
         private static readonly string[] IncompatibleMods =
         {
             "KruFPS", "ImproveFPS", "OptimizeMSC", "ZZDisableAll", "DisableAll",
-            "MSWCOptimization", "Reharmonization", "SatsumaFpsOptimization",
-            "ParkingBrakeAnchorOnly"
+            "MSWCOptimization", "Reharmonization", "SatsumaFpsOptimization"
         };
 
         public static bool IsMySummerCar => Application.productName == "My Summer Car";
