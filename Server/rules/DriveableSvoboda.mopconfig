@@ -1,10 +1,19 @@
 # DriveableSvoboda.mopconfig
-# Leave the "Driveable Svoboda" mod completely alone.
+# Compatibility rules for the "Driveable Svoboda" mod.
+#
+# The car is NOT a stock vehicle, so MOP never toggles the body itself. The real problem is
+# MOP's item scanner: it grabs individual car parts whose names match the item whitelist and
+# manages them as pickable items. That is what breaks the mod. These rules keep MOP off the
+# fragile custom parts. (Names verified with an in-game hierarchy dump of SVOBODA(855kg).)
 min_ver: 4.0.0
 
-# The driveable car itself: never enable/disable it and never build a distant stand-in.
+# The car body. Not a managed vehicle, but declare intent and future-proof it.
 ignore: SVOBODA(855kg) fullignore
 
-# Its wheel covers spawn as pickable items ("hubcap" is on MOP's item whitelist),
-# so the scanner would otherwise manage them - keep MOP off them entirely.
+# Instrument cluster. The scanner grabs it ("dashboard" is whitelisted) and culls it at a
+# distance, so the whole gauge assembly (needles + faces) vanishes -> "invisible dashboard".
+# CONFIRMED: it was the only part carrying MOP's ItemBehaviour in the dump.
+ignore: l%20dashboard%20gauges(Clone) fullignore
+
+# Removable wheel covers become pickable items ("hubcap" + "(Clone)") when detached - keep MOP off them.
 ignore: svoboda%20hubcap(Clone) fullignore

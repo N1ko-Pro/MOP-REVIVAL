@@ -30,6 +30,7 @@ namespace MOPR.Commands
                 case "VERSION": PrintVersion(); break;
                 case "STATUS": PrintStatus(); break;
                 case "GENERATE-LIST": ToggleGenerateList(args); break;
+                case "DUMP": DumpObject(args); break;
                 case "MONITOR": ToggleMonitor(); break;
                 case "PRESAVE": RunPreSave(); break;
                 case "STOP": StopMod(); break;
@@ -50,6 +51,7 @@ namespace MOPR.Commands
                 "<color=yellow>version</color> - print MOPR version\n" +
                 "<color=yellow>status</color> - mod state, mode and managed object counts\n" +
                 "<color=yellow>generate-list [true/false]</color> - dump lists of toggled objects\n" +
+                "<color=yellow>dump <ObjectName></color> - dump an object's full hierarchy + components (in-game)\n" +
                 "<color=yellow>monitor</color> - toggle the on-screen debug monitor (in-game)\n" +
                 "<color=yellow>presave</color> - run the pre-save routine (in-game)\n" +
                 "<color=yellow>stop</color> - stop MOPR (in-game, may break things)\n" +
@@ -96,6 +98,22 @@ namespace MOPR.Commands
 
             ModConsole.LogAlways("[MOPR] Toggled-list generation: <color=" +
                 (MoprSettings.GenerateToggledItemsListDebug ? "green" : "red") + ">" + MoprSettings.GenerateToggledItemsListDebug + "</color>");
+        }
+
+        private static void DumpObject(string[] args)
+        {
+            if (!RequireInGame())
+                return;
+
+            if (args.Length < 2)
+            {
+                ModConsole.LogAlways("[MOPR] Usage: mopr dump <ObjectName>  (e.g. mopr dump SVOBODA(855kg))");
+                return;
+            }
+
+            // Имена объектов могут содержать пробелы — склеиваем всё после "dump" обратно.
+            string name = string.Join(" ", args, 1, args.Length - 1);
+            ObjectDumper.Dump(name);
         }
 
         private static void ToggleMonitor()
