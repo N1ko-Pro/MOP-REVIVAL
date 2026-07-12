@@ -1,29 +1,33 @@
 <#
 .SYNOPSIS
-    Удаление правил (.mopconfig) из базы MOP - REVIVAL.
+    Удаление правил (.mopconfig) из базы MOP - REVIVAL напрямую на GitHub.
 
 .DESCRIPTION
-    Удаляет один или несколько файлов правил из Server\rules, перегенерирует
-    manifest.json локально и (по флагу -Push) коммитит и пушит изменения — тогда
-    Vercel автоматически пересоберёт сайт и уберёт правила из живого манифеста.
+    Работает с ЖИВЫМ состоянием репозитория на GitHub (ветка origin/main), а не с
+    локальной папкой Server\rules — поэтому список и удаление всегда актуальны даже
+    после мерджа PR, когда локальный проект ещё не подтянут.
 
-    Скрипт лежит в <КореньРепо>\Scripts, правила — в <КореньРепо>\Server\rules.
+    Как это устроено:
+      * Список правил берётся из origin/main (после git fetch) командой git ls-tree.
+      * Удаление выполняется во ВРЕМЕННОМ worktree на базе origin/main: файлы удаляются,
+        создаётся коммит и пушится в main. Ваша рабочая папка при этом не затрагивается,
+        а git использует уже настроенную авторизацию (токен не нужен).
+      * После пуша Vercel автоматически пересоберёт сайт и manifest.json.
+
+    Требуется только установленный git и права на пуш в репозиторий (как обычно).
 
 .PARAMETER Name
     Идентификатор(ы) правила — имя файла с расширением .mopconfig или без него.
     Можно передать несколько через запятую или пробел.
 
 .PARAMETER List
-    Показать все имеющиеся правила и выйти (ничего не удаляя).
+    Показать все правила на GitHub и выйти (ничего не удаляя).
 
-.PARAMETER Push
-    После удаления сделать git commit + push в origin/main (запускает авто-деплой Vercel).
+.PARAMETER Branch
+    Ветка, с которой работаем. По умолчанию main.
 
 .PARAMETER Force
     Не спрашивать подтверждение перед удалением.
-
-.PARAMETER NoManifest
-    Не перегенерировать manifest.json локально после удаления.
 
 .PARAMETER DryRun
     Только показать, что будет удалено, без фактического удаления.
@@ -31,7 +35,7 @@
 .EXAMPLE
     .\Scripts\remove-rule.ps1 -List
     .\Scripts\remove-rule.ps1 -Name MOPR_PipelineTest
-    .\Scripts\remove-rule.ps1 -Name FURY,GAZ24 -Push -Force
+    .\Scripts\remove-rule.ps1 -Name FURY,GAZ24 -Force
     .\Scripts\remove-rule.ps1 -Name OldRule -DryRun
 #>
 [CmdletBinding()]
@@ -40,147 +44,172 @@ param(
     [string[]]$Name,
 
     [switch]$List,
-    [switch]$Push,
+    [string]$Branch = 'main',
     [switch]$Force,
-    [switch]$NoManifest,
     [switch]$DryRun
 )
 
 $ErrorActionPreference = 'Stop'
-$env:DOTNET_CLI_UI_LANGUAGE = 'en'
+$env:GIT_TERMINAL_PROMPT = '0'
 
 function Write-Step([string]$Message, [string]$Color = 'Cyan') {
     Write-Host "[MOP-REVIVAL] $Message" -ForegroundColor $Color
 }
 
-# --- Пути (вычисляются относительно этого скрипта) ---------------------------
-$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$RepoRoot  = Split-Path -Parent $ScriptDir
-$ServerDir = Join-Path $RepoRoot 'Server'
-$RulesDir  = Join-Path $ServerDir 'rules'
-
-if (-not (Test-Path $RulesDir)) {
-    Write-Step "Rules folder not found: $RulesDir" 'Red'
-    exit 1
-}
-
-function Get-Rules {
-    Get-ChildItem -Path $RulesDir -Filter '*.mopconfig' -File | Sort-Object Name
-}
-
-# --- Режим списка ------------------------------------------------------------
-if ($List) {
-    $rules = Get-Rules
-    Write-Step "Rules in database: $($rules.Count)" 'Green'
-    $rules | ForEach-Object { "  - " + $_.BaseName }
-    exit 0
-}
-
-if (-not $Name -or $Name.Count -eq 0) {
-    Write-Step 'No rule name given. Use -List to see rules, or pass -Name <Id>.' 'Yellow'
-    exit 1
-}
-
-# --- Находим файлы к удалению ------------------------------------------------
-$targets = @()
-$missing = @()
-foreach ($n in $Name) {
-    $base = ($n -replace '\.mopconfig$', '').Trim()
-    if ([string]::IsNullOrWhiteSpace($base)) { continue }
-    $path = Join-Path $RulesDir ($base + '.mopconfig')
-    if (Test-Path $path) { $targets += (Get-Item $path) }
-    else { $missing += $base }
-}
-
-foreach ($m in $missing) {
-    Write-Step "Rule not found (skipped): $m" 'Yellow'
-}
-
-if ($targets.Count -eq 0) {
-    Write-Step 'Nothing to delete.' 'Red'
-    exit 1
-}
-
-Write-Step "Rule file(s) to delete: $($targets.Count)" 'Yellow'
-$targets | ForEach-Object { "  - " + $_.BaseName }
-
-# --- Сухой прогон ------------------------------------------------------------
-if ($DryRun) {
-    Write-Step 'Dry run - nothing was deleted.' 'DarkGray'
-    exit 0
-}
-
-# --- Подтверждение -----------------------------------------------------------
-if (-not $Force) {
-    $answer = Read-Host 'Delete these rule(s)? [y/N]'
-    if ($answer -notmatch '^(y|yes)$') {
-        Write-Step 'Cancelled.' 'DarkGray'
-        exit 0
+# git пишет прогресс/подсказки в stderr — под 'Stop' PowerShell принял бы это за
+# ошибку. Обёртка выполняет git с ErrorActionPreference=Continue и возвращает вывод;
+# код возврата остаётся в $global:GitExit.
+function Invoke-Git {
+    param([Parameter(ValueFromRemainingArguments = $true)][string[]]$GitArgs)
+    $prev = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        $output = & git @GitArgs 2>&1
+        $global:GitExit = $LASTEXITCODE
+        return $output
+    }
+    finally {
+        $ErrorActionPreference = $prev
     }
 }
 
-# --- Удаление ----------------------------------------------------------------
-$deleted = @()
-foreach ($t in $targets) {
-    Remove-Item -LiteralPath $t.FullName -Force
-    Write-Step "Deleted $($t.Name)" 'Green'
-    $deleted += $t.BaseName
+# --- Пути и проверки ---------------------------------------------------------
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$RepoRoot  = Split-Path -Parent $ScriptDir
+$RemoteRef = "origin/$Branch"
+$RulesPath = 'Server/rules'
+
+if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
+    Write-Step 'git not found in PATH. Install Git and try again.' 'Red'
+    exit 1
 }
 
-# --- Перегенерация манифеста -------------------------------------------------
-if (-not $NoManifest) {
-    if (Test-Path (Join-Path $ServerDir 'package.json')) {
-        Write-Step 'Regenerating manifest...'
-        Push-Location $ServerDir
-        # Внешние процессы (npm) могут писать в stderr — под 'Stop' это рвёт скрипт.
-        $prevEap = $ErrorActionPreference
-        $ErrorActionPreference = 'Continue'
+Push-Location $RepoRoot
+try {
+    # --- Синхронизируем состояние ветки с GitHub -----------------------------
+    Write-Step "Fetching latest state from GitHub ($RemoteRef)..."
+    Invoke-Git fetch origin $Branch --quiet | Out-Null
+    if ($global:GitExit -ne 0) {
+        Write-Step 'git fetch failed. Check your connection / remote.' 'Red'
+        exit 1
+    }
+
+    function Get-RemoteRules {
+        $lines = Invoke-Git ls-tree -r --name-only $RemoteRef -- $RulesPath
+        if ($global:GitExit -ne 0) { return @() }
+        $lines |
+            Where-Object { $_ -match '\.mopconfig$' } |
+            ForEach-Object { [System.IO.Path]::GetFileNameWithoutExtension($_.Trim()) } |
+            Sort-Object
+    }
+
+    $remote = @(Get-RemoteRules)
+
+    # --- Режим списка --------------------------------------------------------
+    if ($List) {
+        Write-Step "Rules on GitHub ($Branch): $($remote.Count)" 'Green'
+        $remote | ForEach-Object { "  - $_" }
+        exit 0
+    }
+
+    if (-not $Name -or $Name.Count -eq 0) {
+        Write-Step 'No rule name given. Use -List to see rules, or pass -Name <Id>.' 'Yellow'
+        exit 1
+    }
+
+    # --- Сопоставляем цели с живым списком GitHub ----------------------------
+    # Разбиваем на случай, когда имена переданы через запятую одной строкой
+    # (так бывает при запуске через powershell -File "...").
+    $wanted = @()
+    foreach ($n in $Name) { $wanted += ($n -split '[,\s]+') }
+
+    $targets = @()
+    $missing = @()
+    foreach ($n in $wanted) {
+        $base = ($n -replace '\.mopconfig$', '').Trim()
+        if ([string]::IsNullOrWhiteSpace($base)) { continue }
+        if ($remote -contains $base) { $targets += $base }
+        else { $missing += $base }
+    }
+
+    foreach ($m in $missing) {
+        Write-Step "Rule not found on GitHub (skipped): $m" 'Yellow'
+    }
+
+    if ($targets.Count -eq 0) {
+        Write-Step 'Nothing to delete.' 'Red'
+        exit 1
+    }
+
+    Write-Step "Rule(s) to delete from GitHub: $($targets.Count)" 'Yellow'
+    $targets | ForEach-Object { "  - $_" }
+
+    # --- Сухой прогон --------------------------------------------------------
+    if ($DryRun) {
+        Write-Step 'Dry run - nothing was deleted.' 'DarkGray'
+        exit 0
+    }
+
+    # --- Подтверждение -------------------------------------------------------
+    if (-not $Force) {
+        $answer = Read-Host "Delete these rule(s) from GitHub ($Branch)? [y/N]"
+        if ($answer -notmatch '^(y|yes)$') {
+            Write-Step 'Cancelled.' 'DarkGray'
+            exit 0
+        }
+    }
+
+    # --- Удаление во временном worktree на базе origin/main -------------------
+    # Так мы не трогаем вашу рабочую папку и коммитим ровно поверх свежего main.
+    $work = Join-Path ([System.IO.Path]::GetTempPath()) ("mopr-rules-" + [guid]::NewGuid().ToString('N'))
+
+    Write-Step 'Preparing a clean checkout of the remote branch...'
+    Invoke-Git worktree add --detach --quiet $work $RemoteRef | Out-Null
+    if ($global:GitExit -ne 0 -or -not (Test-Path $work)) {
+        Write-Step 'Failed to create a temporary worktree.' 'Red'
+        exit 1
+    }
+
+    try {
+        Push-Location $work
         try {
-            npm run manifest
-            if ($LASTEXITCODE -ne 0) { Write-Step 'Manifest regeneration failed.' 'Red' }
+            foreach ($base in $targets) {
+                Invoke-Git rm --quiet -- ("$RulesPath/$base.mopconfig") | Out-Null
+                if ($global:GitExit -ne 0) {
+                    Write-Step "Failed to stage deletion of $base." 'Red'
+                    exit 1
+                }
+                Write-Step "Removed $base.mopconfig" 'Green'
+            }
+
+            $msg = 'Remove rule(s): ' + ($targets -join ', ')
+            Invoke-Git commit -m $msg --quiet | Out-Null
+            if ($global:GitExit -ne 0) {
+                Write-Step 'Nothing to commit (already removed?).' 'Yellow'
+                exit 0
+            }
+
+            Write-Step 'Pushing to GitHub...'
+            Invoke-Git push origin "HEAD:$Branch" | Out-Null
+            if ($global:GitExit -ne 0) {
+                Write-Step 'Push rejected (remote moved?). Re-run the script.' 'Red'
+                exit 1
+            }
+            Write-Step 'Pushed. Vercel will redeploy and drop the rule(s) from the live manifest.' 'Green'
         }
         finally {
-            $ErrorActionPreference = $prevEap
             Pop-Location
         }
     }
-    else {
-        Write-Step 'Server/package.json not found - skipping manifest regeneration.' 'Yellow'
-    }
-}
-
-# --- Git commit + push -------------------------------------------------------
-if ($Push) {
-    Write-Step 'Committing and pushing...'
-    Push-Location $RepoRoot
-    # git пишет прогресс в stderr — под 'Stop' PowerShell принял бы это за ошибку.
-    $prevEap = $ErrorActionPreference
-    $ErrorActionPreference = 'Continue'
-    try {
-        foreach ($b in $deleted) {
-            git add -A -- ("Server/rules/" + $b + '.mopconfig') 2>&1 | Out-Null
-        }
-        $msg = 'Remove rule(s): ' + ($deleted -join ', ')
-        git commit -m $msg 2>&1 | Out-Null
-        if ($LASTEXITCODE -ne 0) {
-            Write-Step 'Nothing to commit.' 'Yellow'
-        }
-        else {
-            git push origin main 2>&1 | Out-Null
-            if ($LASTEXITCODE -ne 0) {
-                Write-Step 'Push failed - commit is local. Push manually.' 'Red'
-                exit 1
-            }
-            Write-Step 'Pushed. Vercel will redeploy automatically.' 'Green'
-        }
-    }
     finally {
-        $ErrorActionPreference = $prevEap
-        Pop-Location
+        # Всегда убираем временный worktree.
+        Invoke-Git worktree remove --force $work | Out-Null
+        Invoke-Git worktree prune | Out-Null
     }
-}
-else {
-    Write-Step 'Done (local only). Re-run with -Push to deploy the removal.' 'DarkGray'
-}
 
-Write-Step 'Done.' 'Green'
+    Write-Step 'Tip: run "git pull" to sync your local copy with the change.' 'DarkGray'
+    Write-Step 'Done.' 'Green'
+}
+finally {
+    Pop-Location
+}
