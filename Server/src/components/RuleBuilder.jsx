@@ -74,6 +74,26 @@ export default function RuleBuilder() {
     URL.revokeObjectURL(url);
   }
 
+  // Opening the prefilled GitHub "new file" page. Using window.open() with a
+  // features string ('noopener') makes some browsers treat the call as a popup
+  // and block it; a synthetic anchor click is far more reliable and keeps the
+  // opener detached via rel. If the prefill URL is too long for GitHub to
+  // accept, fall back to an empty new-file page and copy the rule to clipboard.
+  function submit() {
+    if (!canSubmit) return;
+    const full = buildSubmitUrl(idCheck.id, text);
+    const tooLong = full.length > 8000;
+    const url = tooLong ? buildSubmitUrl(idCheck.id, '') : full;
+    if (tooLong) navigator.clipboard?.writeText(text).catch(() => {});
+    const a = document.createElement('a');
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
+
   return (
     <div className="page">
       <div className="page__head">
@@ -225,7 +245,7 @@ export default function RuleBuilder() {
                 className="btn btn--primary"
                 disabled={!canSubmit}
                 title={canSubmit ? '' : t('validator.submitDisabled')}
-                onClick={() => canSubmit && window.open(buildSubmitUrl(idCheck.id, text), '_blank', 'noopener')}
+                onClick={submit}
               >
                 {t('validator.submit')}
               </button>

@@ -7,18 +7,20 @@ import { useHashRoute } from '../lib/router.js';
 const CONTENT = {
   en: {
     settings: [
-      ['Optimization', 'Pick a performance preset (Ultra Quality → Ultra Performance) which sets the draw-distance slider, or move the slider yourself. Toggle the optimization modules — items, locations, vehicles, Satsuma — and extra clean-ups like disabling empty items.'],
-      ['Graphics', 'Shadow distance, dynamic draw distance (eases the horizon indoors / at home), indoor scenery culling and distant model (LOD) stand-ins.'],
-      ['Game', 'Framerate limit, run-in-background, adaptive load balancing (keeps MOP\u2019s own work smooth) and adaptive garbage cleanup.'],
-      ['Fixes', 'Optional vanilla-bug fixes: hide tyre skidmarks (which can leak memory over time) and similar clean-ups.'],
-      ['Saves', 'Save protection, automatic backups, integrity verification, bolt-tightness checks, and manual backup / restore buttons.'],
-      ['Diagnostics', 'The on-screen debug monitor (switch pages with ◄ ► arrows) and verbose log messages — both off by default. The "Disable optimization" emergency switch turns MOP off entirely and re-enables everything.'],
+      ['Performance', 'Pick a preset (Ultra Quality → Performance) that automatically sets how far objects stay loaded — there is no manual slider. "Other" lets you disable or fully destroy empty bottles to cut down on clutter (only one of the two applies).'],
+      ['Optimization', 'The optimization modules. Basic: items, locations and vehicles. Advanced: optimize the Satsuma while driving, game-engine code patches and distant-physics sleep. Graphical: dynamic draw distance (eases the horizon indoors / near home) and indoor scenery culling.'],
+      ['Graphics', 'Adjust the shadow distance and cap the framerate with an FPS limit.'],
+      ['Game', 'Keep the game running in the background, and adaptive garbage cleanup — off by default; it frees memory periodically but can cause brief hitches.'],
+      ['Fixes', 'Optional fixes: stop the Satsuma sliding downhill with the handbrake on, hide the flickering shallow-water lake weed, and hide tyre skidmarks that leak memory over time.'],
+      ['Save protection', 'Protect save files, verify save integrity, restore bolt tightness the game resets by itself, and auto-backup saves — plus manual "back up now" and "restore latest backup" buttons.'],
+      ['Rules server', 'Shows whether the rules server is reachable, checks for rule updates for your installed mods and opens the rules website.'],
+      ['Diagnostics', 'The on-screen debug monitor (arrow keys switch pages) and detailed log messages — both off by default. The Emergency-mode "Disable optimization" switch turns MOP off entirely and re-enables everything.'],
     ],
     faq: [
       ['Can MOP corrupt my save?', 'No. Vehicles are only ever suspended by their physics while parked far away, and everything managed is re-enabled before the game writes a save. MOP also backs up and verifies your save.'],
       ['Does it work with modded cars and mods?', 'Yes. Vehicles (including modded ones) are auto-detected and handled physics-only. For objects that misbehave, a rule file tells MOP to leave them alone — and those download automatically for the mods you have installed.'],
       ['Something disappeared or a quest broke.', 'Try toggling the relevant module off, or flip the "Disable optimization" emergency switch. If it\u2019s a specific mod, a rule file is the proper fix. Please also run "mopr report" and attach the file to a bug report.'],
-      ['How do the presets differ?', 'They only move the draw-distance multiplier: Ultra Quality keeps objects loaded furthest, Ultra Performance the least. Everything else is controlled by the individual toggles.'],
+      ['How do the presets differ?', 'Each preset automatically sets how far objects stay loaded — Ultra Quality keeps them loaded furthest, Performance the least. There is no manual distance slider; everything else is controlled by the individual toggles.'],
     ],
     commands: [
       ['mopr status', 'Managed/active object counts and current settings.'],
@@ -31,18 +33,20 @@ const CONTENT = {
   },
   ru: {
     settings: [
-      ['Оптимизация', 'Выберите пресет производительности (Ultra Quality → Ultra Performance), который выставит ползунок дистанции, или двигайте ползунок вручную. Переключайте модули — предметы, локации, транспорт, Сатсума — и доп. очистки, например отключение пустых предметов.'],
-      ['Графика', 'Дальность теней, динамическая дальность прорисовки (сглаживает горизонт в помещении/дома), отсечение декора в помещениях и дальние подставки (LOD).'],
-      ['Игра', 'Лимит FPS, работа в фоне, адаптивная балансировка нагрузки (сглаживает работу самого мода) и адаптивная сборка мусора.'],
-      ['Фиксы', 'Необязательные исправления ванильных багов: скрытие следов шин (которые со временем «текут» по памяти) и подобное.'],
-      ['Сохранения', 'Защита сейвов, авто-бэкапы, проверка целостности, контроль затяжки болтов и кнопки ручного бэкапа/восстановления.'],
-      ['Диагностика', 'Экранный монитор отладки (страницы — стрелками ◄ ►) и подробные лог-сообщения — оба по умолчанию выключены. Аварийный переключатель «Disable optimization» полностью выключает мод и возвращает всё на место.'],
+      ['Быстродействие', 'Выберите пресет (Ultra Quality → Performance), который автоматически задаёт дальность загрузки объектов — ползунка вручную больше нет. В блоке «Другое» можно отключать или полностью уничтожать пустые бутылки, чтобы не копился мусор (работает что-то одно из двух).'],
+      ['Оптимизация', 'Модули оптимизации. Базовые: предметы, локации и транспорт. Продвинутые: оптимизация Satsuma в режиме вождения, патчи кода движка и усыпление дальней физики. Графические: динамическая дальность прорисовки (сглаживает горизонт в помещении/у дома) и отсечение пейзажа в помещениях.'],
+      ['Графика', 'Настройка дальности теней и ограничение частоты кадров (лимит FPS).'],
+      ['Игра', 'Работа в фоне и адаптивная чистка мусора — по умолчанию выключена; периодически освобождает память, но возможны короткие подлагивания.'],
+      ['Исправления', 'Необязательные фиксы: не даёт Satsuma сползать с холма с поднятым ручником, скрывает мерцающую ряску на мелководье и убирает следы шин, которые со временем расходуют память.'],
+      ['Защита сохранений', 'Защита файлов сейва, проверка целостности, восстановление затяжки болтов, которую игра сбрасывает сама, и автобэкапы — плюс кнопки «сделать бэкап сейчас» и «восстановить последний бэкап».'],
+      ['Сервер правил', 'Показывает доступность сервера правил, проверяет обновления правил для установленных модов и открывает сайт правил.'],
+      ['Отладка', 'Экранный монитор отладки (страницы — стрелками) и подробные лог-сообщения — оба по умолчанию выключены. Переключатель аварийного режима «Отключить оптимизацию» полностью выключает мод и возвращает всё на место.'],
     ],
     faq: [
       ['Может ли MOP испортить сохранение?', 'Нет. У припаркованного вдали транспорта замораживается только физика, и всё управляемое возвращается до записи сейва. MOP также делает бэкап и проверяет сохранение.'],
       ['Работает ли с модовыми машинами и модами?', 'Да. Транспорт (в т.ч. модовый) определяется автоматически и обрабатывается только по физике. Для проблемных объектов файл правил говорит моду не трогать их — и он скачивается автоматически для установленных модов.'],
-      ['Что-то исчезло или сломался квест.', 'Попробуйте выключить соответствующий модуль или аварийный переключатель «Disable optimization». Если дело в конкретном моде — правильное решение это файл правил. Также выполните «mopr report» и приложите файл к баг-репорту.'],
-      ['Чем отличаются пресеты?', 'Они лишь двигают множитель дистанции: Ultra Quality держит объекты дальше всех, Ultra Performance — ближе всех. Остальное задаётся отдельными переключателями.'],
+      ['Что-то исчезло или сломался квест.', 'Попробуйте выключить соответствующий модуль или аварийный переключатель «Отключить оптимизацию». Если дело в конкретном моде — правильное решение это файл правил. Также выполните «mopr report» и приложите файл к баг-репорту.'],
+      ['Чем отличаются пресеты?', 'Каждый пресет автоматически задаёт дальность загрузки объектов: Ultra Quality держит их дальше всех, Performance — ближе всех. Ползунка дистанции вручную нет; остальное задаётся отдельными переключателями.'],
     ],
     commands: [
       ['mopr status', 'Счётчики управляемых/активных объектов и текущие настройки.'],
