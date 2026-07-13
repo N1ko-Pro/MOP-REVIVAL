@@ -26,7 +26,7 @@ namespace MOPR
         public override string ID => "MOPR";
         public override string Name => "MOP - REVIVAL";
         public override string Author => "ANICKON";
-        public override string Version => "4.0.0b";
+        public override string Version => "4.0.1b";
         public const string SubVersion = "";
         public const string Edition = "MSCLoader";
         public override string Description => LocalizationCore.Get("mod.description");

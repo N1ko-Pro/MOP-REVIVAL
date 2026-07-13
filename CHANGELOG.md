@@ -3,6 +3,30 @@
 All notable changes to **MOPR (Modern Optimization Plugin — Revival)** are documented here.
 Version numbers follow the original MOP scheme; `b` marks a beta build.
 
+## 4.0.1b (13.07.2026)
+
+Compatibility release: an escape hatch for full Satsuma-overhaul mods, tooling for authoring
+compatibility rules, and a couple of mod-compatibility fixes.
+
+### Added
+
+- **`satsuma_ignore` rule flag** — makes MOP leave the Satsuma entirely to another mod (no fixes,
+  node toggling, renderer culling or save-time part gluing). Fixes a hard crash on save when a mod
+  fully overhauls the Satsuma (e.g. *Satsuma LX*). The rest of the world is still optimized.
+- **`mopr dump <ObjectName>` console command** — writes an object's full hierarchy with per-node
+  components (Rigidbody/Joint/Collider/Renderer/PlayMakerFSM) and MOP item-management markers,
+  to help author precise compatibility rules.
+- Rule-load diagnostics — the rules-loaded summary, `Custom.txt` state and active rule flags are
+  now always logged and shown in `mopr status`.
+- Bundled compatibility rules for **Driveable Svoboda** and **Satsuma LX**.
+
+### Bug Fixes
+
+- Fixed a `NullReferenceException` (`FRIDGE_DOORHANDLE_ERROR`) in the Yard when another mod adds a
+  working fridge (e.g. *BetterMSC*) whose door handle lacks the vanilla FSM — one bad handle no
+  longer aborts the whole door-handle pass.
+- Hardened the save-time sauna toggle against a missing stove-heat FSM (alternative scene layouts).
+
 ## 4.0.0b (11.07.2026)
 
 First release of the **Revival** line by ANICKON — a complete, from-scratch rewrite of

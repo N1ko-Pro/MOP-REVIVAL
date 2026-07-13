@@ -8,6 +8,6 @@
 # items, other vehicles, LOD, sectors...) is still optimized as usual.
 # Confirmed with the mod's author-side testing: without this the save crash is reproducible,
 # with it saving works.
-min_ver: 4.0.0
+min_ver: 4.0.1
 
 satsuma_ignore
