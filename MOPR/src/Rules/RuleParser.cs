@@ -96,6 +96,11 @@ namespace MOPR.Rules
                 case "satsuma_ignore_renderer":
                     manager.SpecialRules.SatsumaIgnoreRenderers = true;
                     break;
+                case "satsuma_ignore":
+                    // Полный отказ от оптимизации Сатсумы — для модов, целиком переделывающих её
+                    // (напр. Satsuma LX), где наше вмешательство валит игру при сохранении.
+                    manager.SpecialRules.SatsumaIgnore = true;
+                    break;
                 case "dont_destroy_empty_bottles":
                     manager.SpecialRules.DontDestroyEmptyBeerBottles = true;
                     break;

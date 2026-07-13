@@ -35,6 +35,8 @@ namespace MOPR.Rules
         private void LoadAll()
         {
             int fileCount = 0;
+            bool customFound = false;
+            string customPath = Path.Combine(MOPR.ModConfigPath, "Custom.txt");
 
             try
             {
@@ -49,11 +51,11 @@ namespace MOPR.Rules
                 }
 
                 // Пользовательские правила игрока (не с сервера).
-                string customPath = Path.Combine(MOPR.ModConfigPath, "Custom.txt");
                 if (File.Exists(customPath))
                 {
                     RuleParser.ParseFile(customPath, this);
                     fileCount++;
+                    customFound = true;
                 }
             }
             catch (System.Exception ex)
@@ -61,7 +63,25 @@ namespace MOPR.Rules
                 ExceptionManager.New(ex, false, "RULES_LOAD_ERROR");
             }
 
-            ModConsole.Log($"[MOPR] Rules loaded: {Rules.Count} rule(s) from {fileCount} file(s).");
+            // Всегда выводим итог загрузки правил (LogAlways), чтобы диагностика совместимости не
+            // зависела от настройки «показывать лог». Явно сообщаем судьбу Custom.txt и активные флаги.
+            ModConsole.LogAlways($"[MOPR] Rules loaded: {Rules.Count} rule(s) from {fileCount} file(s).");
+            ModConsole.LogAlways($"[MOPR] Custom.txt: {(customFound ? "loaded" : "not found")} ({customPath})");
+            ModConsole.LogAlways($"[MOPR] Active rule flags: {DescribeActiveFlags()}");
+        }
+
+        /// <summary>Список активных особых флагов правил (для диагностики: лог загрузки и «mopr status»).</summary>
+        public string DescribeActiveFlags()
+        {
+            List<string> flags = new List<string>();
+            if (SpecialRules.SatsumaIgnoreRenderers) flags.Add("satsuma_ignore_renderer");
+            if (SpecialRules.SatsumaIgnore) flags.Add("satsuma_ignore");
+            if (SpecialRules.DontDestroyEmptyBeerBottles) flags.Add("dont_destroy_empty_bottles");
+            if (SpecialRules.SkipFuryColliderFix) flags.Add("skip_fury_collider_fix");
+            if (SpecialRules.IgnoreModVehicles) flags.Add("ignore_mod_vehicles");
+            if (SpecialRules.ToggleAllVehiclesPhysicsOnly) flags.Add("toggle_all_vehicles_physics_only");
+            if (SpecialRules.NoLods) flags.Add("no_lods");
+            return flags.Count > 0 ? string.Join(", ", flags.ToArray()) : "(none)";
         }
 
         public void AddRule(Rule rule)

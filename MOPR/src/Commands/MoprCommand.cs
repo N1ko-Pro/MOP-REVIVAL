@@ -10,6 +10,7 @@ using MSCLoader;
 using MOPR.Common;
 using MOPR.Common.Enumerations;
 using MOPR.Managers;
+using MOPR.Rules;
 
 namespace MOPR.Commands
 {
@@ -82,7 +83,8 @@ namespace MOPR.Commands
                 "World objects: " + DescribeManager(WorldObjectManager.Instance) + "\n" +
                 "Items: " + DescribeManager(ItemsManager.Instance) + "\n" +
                 "Vehicles: " + DescribeManager(VehicleManager.Instance) + "\n" +
-                "Places: " + DescribeManager(PlaceManager.Instance));
+                "Places: " + DescribeManager(PlaceManager.Instance) + "\n" +
+                "Rule flags: " + (RulesManager.Instance == null ? "-" : RulesManager.Instance.DescribeActiveFlags()));
         }
 
         /// <summary>Формирует «включено/всего» для менеджера (или «-», если он ещё не создан).</summary>

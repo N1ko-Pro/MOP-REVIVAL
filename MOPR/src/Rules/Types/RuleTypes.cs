@@ -66,6 +66,7 @@ namespace MOPR.Rules.Types
     internal struct SpecialRules
     {
         public bool SatsumaIgnoreRenderers;
+        public bool SatsumaIgnore;
         public bool DontDestroyEmptyBeerBottles;
         public bool SkipFuryColliderFix;
         public bool IgnoreModVehicles;

@@ -99,6 +99,14 @@ export const DIRECTIVES = {
     summary: 'Never renderer-cull the Satsuma.',
     detail: 'Use if a mod that alters the Satsuma flickers or vanishes when its renderers are toggled.',
   },
+  satsuma_ignore: {
+    kind: 'flag',
+    group: 'flags',
+    syntax: 'satsuma_ignore',
+    summary: 'Leave the Satsuma entirely to another mod.',
+    detail:
+      'The strongest Satsuma compatibility switch: MOP applies no fixes, toggling, renderer culling or save-time part gluing to the Satsuma at all. Use for mods that fully overhaul it (e.g. Satsuma LX) and crash or break when MOP also manages it.',
+  },
   dont_destroy_empty_bottles: {
     kind: 'flag',
     group: 'flags',

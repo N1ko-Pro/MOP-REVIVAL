@@ -63,8 +63,16 @@ namespace MOPR.Places
                 foreach (Transform door in transform.GetComponentsInChildren<Transform>()
                     .Where(t => t.root == transform && t.gameObject.name.Contains("Door") && t.Find("Pivot") != null).ToArray())
                 {
-                    if (door.Find("Pivot/Handle") != null)
-                        door.Find("Pivot/Handle").gameObject.GetComponent<PlayMakerFSM>().Fsm.RestartOnEnable = false;
+                    // Двери, добавленные другими модами (например рабочий холодильник BetterMSC),
+                    // могут иметь Pivot/Handle без ванильного PlayMakerFSM. Пропускаем такую ручку,
+                    // чтобы NRE на одной двери не срывал обработку всех остальных.
+                    Transform handle = door.Find("Pivot/Handle");
+                    if (handle == null)
+                        continue;
+
+                    PlayMakerFSM handleFsm = handle.GetComponent<PlayMakerFSM>();
+                    if (handleFsm != null)
+                        handleFsm.Fsm.RestartOnEnable = false;
                 }
             }
             catch (Exception ex)
@@ -179,18 +187,14 @@ namespace MOPR.Places
             }
 
             // Печь сауны разогрета — держим симуляцию включённой независимо от дистанции.
+            // Если FSM печи не нашёлся (иная сборка сцены другим модом), saunaStoveHeat/saumaSimulation
+            // могут быть null — не роняем переключение, в том числе на пути сохранения (OnSave).
             if (sauna != null)
             {
-                if (saunaStoveHeat.Value > StoveOnSimulationPoint)
-                {
-                    sauna.SetActive(true);
-                    saumaSimulation.SetActive(true);
-                }
-                else
-                {
-                    sauna.SetActive(enabled);
-                    saumaSimulation.SetActive(enabled);
-                }
+                bool overheated = saunaStoveHeat != null && saunaStoveHeat.Value > StoveOnSimulationPoint;
+                sauna.SetActive(overheated || enabled);
+                if (saumaSimulation != null)
+                    saumaSimulation.SetActive(overheated || enabled);
             }
         }
     }

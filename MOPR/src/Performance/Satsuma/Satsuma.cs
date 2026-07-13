@@ -122,6 +122,23 @@ namespace MOPR.Vehicles.Cases
             lastGoodRotation = transform.localRotation;
             lastGoodPosition = transform.localPosition;
 
+            // Полный отказ от управления Сатсумой (правило satsuma_ignore): для модов, которые
+            // целиком переделывают Сатсуму (напр. Satsuma LX). Мы НЕ вешаем фиксы/компоненты и не
+            // собираем списки болтов/узлов — иначе наши операции по заменённым модом деталям валят
+            // игру при сохранении (OnSaveGlueAll/ToggleElements). Коллекции инициализируем пустыми,
+            // чтобы весь остальной код (циклы по спискам) оставался безопасным.
+            if (RulesManager.Instance.SpecialRules.SatsumaIgnore)
+            {
+                Toggle = IgnoreToggle;
+                IsActive = false;
+                satsumaBoltsAntiReloads = new List<SatsumaBoltsAntiReload>();
+                satsumaOnActionObjects = new List<SatsumaOnActionObjects>();
+                maskedElements = new Dictionary<GameObject, bool>();
+                dashboardMaterials = new List<Material>();
+                rb.isKinematic = true;
+                return;
+            }
+
             // Разовые правки/фиксы (тела — в Satsuma.Setup.cs). Каждый шаг изолирован своим try/catch.
             SetupSeats();
             SetupMechanicalWearAndHandbrake();
@@ -291,6 +308,10 @@ namespace MOPR.Vehicles.Cases
         /// <summary>Включает/выключает все рендереры Сатсумы (кроме её корня и по ignore-правилам).</summary>
         private void RenderersCulling(bool enabled)
         {
+            // Правило satsuma_ignore: рендереры Сатсумы не трогаем вовсе.
+            if (RulesManager.Instance.SpecialRules.SatsumaIgnore)
+                return;
+
             if (RulesManager.Instance.SpecialRules.SatsumaIgnoreRenderers)
                 enabled = true;
 
@@ -332,6 +353,10 @@ namespace MOPR.Vehicles.Cases
         /// <summary>Переключает часть узлов Сатсумы в зависимости от дистанции игрока.</summary>
         public void ToggleElements(float distance)
         {
+            // Правило satsuma_ignore: Сатсума полностью на попечении другого мода — не трогаем её узлы.
+            if (RulesManager.Instance.SpecialRules.SatsumaIgnore)
+                return;
+
             try
             {
                 bool onEngine = distance < 2;
@@ -514,6 +539,10 @@ namespace MOPR.Vehicles.Cases
         /// <summary>При сохранении: намертво «приклеивает» все детали к машине.</summary>
         public void OnSaveGlueAll()
         {
+            // Правило satsuma_ignore: не склеиваем детали — их болты/джойнты могут быть заменены модом.
+            if (RulesManager.Instance.SpecialRules.SatsumaIgnore)
+                return;
+
             for (int i = 0; i < satsumaBoltsAntiReloads.Count; i++)
             {
                 if (satsumaBoltsAntiReloads[i] == null)
