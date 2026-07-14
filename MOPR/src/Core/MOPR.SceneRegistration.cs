@@ -149,7 +149,8 @@ namespace MOPR
             Guard("FITTAN_RENDERERS_ERROR", () =>
             {
                 GenericObject fittan = worldObjectManager.Add(GameObject.Find("TRAFFIC").transform.Find("VehiclesDirtRoad/Rally/FITTAN").gameObject, DisableOn.Distance, 600, ToggleModes.MultipleRenderers);
-                fittan.MinimumToggleDistance = 400;
+                if (fittan != null)
+                    fittan.MinimumToggleDistance = 400;
             });
 
             // Cabin: в Quality не выгружаем дом кабины и сгоревший дом.
@@ -213,7 +214,8 @@ namespace MOPR
             foreach (GameObject wall in Resources.FindObjectsOfTypeAll<GameObject>().Where(g => g.name == "LogwallLarge"))
             {
                 GenericObject logWall = worldObjectManager.Add(wall, DisableOn.Distance, 300);
-                logWall.MinimumToggleDistance = 200;
+                if (logWall != null)
+                    logWall.MinimumToggleDistance = 200;
             }
         }
 
@@ -227,7 +229,8 @@ namespace MOPR
             GameObject churchLOD = church.transform.Find("LOD").gameObject;
             church.GetComponent<PlayMakerFSM>().enabled = false;
             GenericObject churchObject = worldObjectManager.Add(churchLOD, DisableOn.Distance, 300);
-            churchObject.MinimumToggleDistance = 200;
+            if (churchObject != null)
+                churchObject.MinimumToggleDistance = 200;
         }
 
         private void RegisterHighwayTraffic()
@@ -236,7 +239,8 @@ namespace MOPR
             foreach (Transform child in vehiclesHighway.GetComponentsInChildren<Transform>(true).Where(f => f.parent == vehiclesHighway))
             {
                 GenericObject trafficObj = worldObjectManager.Add(child.gameObject, DisableOn.Distance, 600, ToggleModes.MultipleRenderers);
-                trafficObj.MinimumToggleDistance = 400;
+                if (trafficObj != null)
+                    trafficObj.MinimumToggleDistance = 400;
             }
 
             // Заодно чиним лаг при первичной загрузке трафика.

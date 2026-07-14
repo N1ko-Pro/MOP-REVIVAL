@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using UnityEngine;
 using MSCLoader;
 using MOPR.Common;
@@ -45,7 +46,9 @@ namespace MOPR.Rules
 
         private static void ParseLine(string raw, string sourceMod, RulesManager manager)
         {
-            string line = raw == null ? string.Empty : raw.Trim();
+            // Обрезаем пробелы и заодно BOM/zero-width (U+FEFF, U+200B): их иногда заносят редакторы в
+            // файлы правил, из-за чего директива (например "ignore") переставала распознаваться.
+            string line = raw == null ? string.Empty : raw.Trim().Trim('\uFEFF', '\u200B').Trim();
             if (line.Length == 0 || line.StartsWith("#"))
                 return;
 
@@ -204,17 +207,54 @@ namespace MOPR.Rules
             });
         }
 
-        /// <summary>Разбивает по пробелам и заменяет %20 на пробел в каждом токене.</summary>
+        /// <summary>
+        /// Разбивает значение на токены. Имя с пробелами можно записать двумя способами:
+        /// в двойных кавычках ("Lamp shade(item1)") — кавычки снимаются, пробелы внутри сохраняются;
+        /// либо через %20 (Lamp%20shade). Вне кавычек разделитель — пробел. Оба способа работают
+        /// одновременно (в каждом токене %20 также раскрывается в пробел). Для строк без кавычек
+        /// поведение прежнее (обычное разбиение по пробелам).
+        /// </summary>
         private static string[] Tokenize(string value)
         {
             if (string.IsNullOrEmpty(value))
                 return new string[0];
 
-            string[] parts = value.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-            for (int i = 0; i < parts.Length; i++)
-                parts[i] = Unescape(parts[i]);
+            List<string> tokens = new List<string>();
+            StringBuilder current = new StringBuilder();
+            bool inQuotes = false;
+            bool hasToken = false;
 
-            return parts;
+            for (int i = 0; i < value.Length; i++)
+            {
+                char c = value[i];
+
+                if (c == '"')
+                {
+                    inQuotes = !inQuotes;
+                    hasToken = true; // кавычки задают токен явно (в т.ч. пустой "")
+                    continue;
+                }
+
+                if (c == ' ' && !inQuotes)
+                {
+                    if (hasToken)
+                    {
+                        tokens.Add(Unescape(current.ToString()));
+                        current.Length = 0;
+                        hasToken = false;
+                    }
+
+                    continue;
+                }
+
+                current.Append(c);
+                hasToken = true;
+            }
+
+            if (hasToken)
+                tokens.Add(Unescape(current.ToString()));
+
+            return tokens.ToArray();
         }
 
         private static string Unescape(string token)

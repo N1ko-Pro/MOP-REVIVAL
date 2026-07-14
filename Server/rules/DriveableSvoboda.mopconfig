@@ -1,19 +1,26 @@
 # DriveableSvoboda.mopconfig
-# Compatibility rules for the "Driveable Svoboda" mod.
+# Правила совместимости для мода "Driveable Svoboda".
 #
-# The car is NOT a stock vehicle, so MOP never toggles the body itself. The real problem is
-# MOP's item scanner: it grabs individual car parts whose names match the item whitelist and
-# manages them as pickable items. That is what breaks the mod. These rules keep MOP off the
-# fragile custom parts. (Names verified with an in-game hierarchy dump of SVOBODA(855kg).)
+# Проверено дампом (mopr dump "SVOBODA(855kg)", 468 узлов):
+#   * SVOBODA(855kg) -- валидная UnityCar-машина (CarDynamics/Axles/Drivetrain/RB), см. секцию
+#     "Vehicle candidates" в дампе. Оптимизируем её физику режимом vehicle_physics: на расстоянии
+#     физика UnityCar встаёт на паузу (самый дорогой ресурс), сам объект НЕ выключается, поэтому все
+#     ~30 скриптов/FSM мода продолжают жить. Предохранители ToggleUnityCar: физику не гасим, пока
+#     машина едет / не на земле / игрок внутри / привязан трос.
+#   * Тряску камеры в салоне (камера водителя висит на ConfigurableJoint "DriverHeadPivot") убрали
+#     правкой движка: ToggleUnityCar больше не «тычет» тело уже работающей машины каждый тик
+#     (не переустанавливает useGravity и не зовёт WakeUp, если состояние уже целевое).
+#   * Приборки берутся сканером предметов отдельно (в имени "dashboard" + маркер "(Clone)") и гаснут
+#     на расстоянии -> приборка пропадает. У мода их ДВЕ, с разными именами (подтверждено дампами):
+#       - "l dashboard gauges(Clone)"  -- ездовая SVOBODA(855kg)  (поле LGauges);
+#       - "ls dashboard gauges(Clone)" -- вреха на свалке svoboda_wreck (поле LSGauges).
+#     Обе гасим fullignore. Вреха (svoboda_wreck) -- статичный [RB(kinematic)] объект, НЕ UnityCar
+#     (Vehicle candidates: none), поэтому вехикл-правило ей не нужно.
 min_ver: 4.0.0
 
-# The car body. Not a managed vehicle, but declare intent and future-proof it.
-ignore: SVOBODA(855kg) fullignore
+# Физическая оптимизация ездовой машины без выключения объекта (безопасно для кастомных модов).
+toggle: SVOBODA(855kg) vehicle_physics
 
-# Instrument cluster. The scanner grabs it ("dashboard" is whitelisted) and culls it at a
-# distance, so the whole gauge assembly (needles + faces) vanishes -> "invisible dashboard".
-# CONFIRMED: it was the only part carrying MOP's ItemBehaviour in the dump.
+# Не давать сканеру предметов трогать приборки (иначе пропадают на расстоянии).
 ignore: l%20dashboard%20gauges(Clone) fullignore
-
-# Removable wheel covers become pickable items ("hubcap" + "(Clone)") when detached - keep MOP off them.
-ignore: svoboda%20hubcap(Clone) fullignore
+ignore: ls%20dashboard%20gauges(Clone) fullignore

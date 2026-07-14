@@ -142,7 +142,7 @@ export const TOGGLE_MODES = [
 ];
 
 export const authorTips = [
-  'Write spaces in object names as %20 — e.g. SATSUMA(557kg,%20248).',
+  'Write spaces in object names as %20 (e.g. SATSUMA(557kg,%20248)) or wrap the name in "double quotes" (e.g. "Lamp shade(item1)").',
   'Lines starting with # are comments.',
   'One directive per line. Unknown directives are ignored with a warning in the log.',
   "The file name must match the target mod's ID — e.g. FishingMod.mopconfig.",
@@ -236,6 +236,36 @@ export function buildRuleText({ modId, minVer, entries, flags }) {
 const VERSION_RE = /^\d+(\.\d+){0,3}[A-Za-z]*$/;
 const VEC_RE = /^-?\d+(\.\d+)?,-?\d+(\.\d+)?,-?\d+(\.\d+)?$/;
 
+// Splits a directive value into tokens, honoring "double quotes" so a name with spaces stays one
+// token (quotes stripped). Mirrors the mod parser (RuleParser.Tokenize); %20 is left as-is here
+// since validation only counts args and checks mode names.
+function tokenizeValue(value) {
+  const tokens = [];
+  let current = '';
+  let inQuotes = false;
+  let hasToken = false;
+  for (let i = 0; i < value.length; i += 1) {
+    const c = value[i];
+    if (c === '"') {
+      inQuotes = !inQuotes;
+      hasToken = true;
+      continue;
+    }
+    if (c === ' ' && !inQuotes) {
+      if (hasToken) {
+        tokens.push(current);
+        current = '';
+        hasToken = false;
+      }
+      continue;
+    }
+    current += c;
+    hasToken = true;
+  }
+  if (hasToken) tokens.push(current);
+  return tokens;
+}
+
 /**
  * Parses a .mopconfig and returns per-line diagnostics plus a summary.
  * levels: 'blank' | 'comment' | 'ok' | 'warn' | 'error'
@@ -281,7 +311,7 @@ export function parseRuleFile(text) {
 
     const key = line.slice(0, colon).trim().toLowerCase();
     const rest = line.slice(colon + 1).trim();
-    const args = rest.length ? rest.split(/\s+/) : [];
+    const args = rest.length ? tokenizeValue(rest) : [];
     const def = DIRECTIVES[key];
 
     if (!def) {

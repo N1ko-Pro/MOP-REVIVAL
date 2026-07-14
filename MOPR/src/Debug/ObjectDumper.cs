@@ -37,6 +37,7 @@ namespace MOPR.Common
 
             StringBuilder sb = new StringBuilder(8192);
             List<string> managedItems = new List<string>();
+            List<string> vehicleRoots = new List<string>();
             int[] counters = { 0 }; // [0] — сколько узлов записано.
 
             sb.Append("[MOPR] Object dump: ").AppendLine(root.name);
@@ -44,10 +45,12 @@ namespace MOPR.Common
             sb.Append("Generated: ").AppendLine(System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
             sb.AppendLine("Tags: INACTIVE, RB / RB(kinematic), Joint:<type>, Collider, Renderer, FSM:<name>,");
             sb.AppendLine("      <MOP-ItemBehaviour> = MOPR manages it as an item RIGHT NOW,");
-            sb.AppendLine("      <MOP-would-grab> = matches MOPR item whitelist, <ignored-by-rule> = an ignore rule hit.");
+            sb.AppendLine("      <MOP-would-grab> = matches MOPR item whitelist, <ignored-by-rule> = an ignore rule hit,");
+            sb.AppendLine("      CarDynamics/Axles/Drivetrain = UnityCar parts; a node with all three is a valid");
+            sb.AppendLine("      target for `toggle: <name> vehicle` / `vehicle_physics`.");
             sb.AppendLine(new string('-', 70));
 
-            AppendNode(sb, root.transform, 0, counters, managedItems);
+            AppendNode(sb, root.transform, 0, counters, managedItems, vehicleRoots);
 
             sb.AppendLine();
             sb.AppendLine(new string('=', 70));
@@ -56,6 +59,15 @@ namespace MOPR.Common
                 sb.AppendLine("  (none)");
             else
                 foreach (string line in managedItems)
+                    sb.Append("  ").AppendLine(line);
+
+            sb.AppendLine();
+            sb.Append("Vehicle candidates (UnityCar root -> valid `toggle: <name> vehicle[_physics]`) (")
+              .Append(vehicleRoots.Count).AppendLine("):");
+            if (vehicleRoots.Count == 0)
+                sb.AppendLine("  (none)");
+            else
+                foreach (string line in vehicleRoots)
                     sb.Append("  ").AppendLine(line);
 
             sb.AppendLine();
@@ -86,20 +98,20 @@ namespace MOPR.Common
                 .FirstOrDefault(g => g.name == name);
         }
 
-        private static void AppendNode(StringBuilder sb, Transform t, int depth, int[] counters, List<string> managedItems)
+        private static void AppendNode(StringBuilder sb, Transform t, int depth, int[] counters, List<string> managedItems, List<string> vehicleRoots)
         {
             if (counters[0] >= MaxNodes || depth > MaxDepth)
                 return;
 
             counters[0]++;
-            sb.Append(new string(' ', depth * 2)).Append(t.gameObject.name).Append(Tags(t, managedItems)).AppendLine();
+            sb.Append(new string(' ', depth * 2)).Append(t.gameObject.name).Append(Tags(t, managedItems, vehicleRoots)).AppendLine();
 
             foreach (Transform child in t)
-                AppendNode(sb, child, depth + 1, counters, managedItems);
+                AppendNode(sb, child, depth + 1, counters, managedItems, vehicleRoots);
         }
 
-        /// <summary>Собирает компонентные пометки узла и попутно копит список «предметных» узлов.</summary>
-        private static string Tags(Transform t, List<string> managedItems)
+        /// <summary>Собирает компонентные пометки узла и попутно копит списки «предметных» узлов и вехикл-кандидатов.</summary>
+        private static string Tags(Transform t, List<string> managedItems, List<string> vehicleRoots)
         {
             List<string> parts = new List<string>();
             GameObject go = t.gameObject;
@@ -120,6 +132,16 @@ namespace MOPR.Common
 
             if (t.GetComponent<Renderer>() != null)
                 parts.Add("Renderer");
+
+            // UnityCar-стек: узел, где есть все три, годится под `toggle: <name> vehicle[_physics]`.
+            bool hasCarDynamics = t.GetComponent<CarDynamics>() != null;
+            bool hasAxles = t.GetComponent<Axles>() != null;
+            bool hasDrivetrain = t.GetComponent<Drivetrain>() != null;
+            if (hasCarDynamics) parts.Add("CarDynamics");
+            if (hasAxles) parts.Add("Axles");
+            if (hasDrivetrain) parts.Add("Drivetrain");
+            if (hasCarDynamics && hasAxles && hasDrivetrain)
+                vehicleRoots.Add(go.name + (t.GetComponent<Rigidbody>() != null ? "" : "  (WARNING: no Rigidbody)"));
 
             foreach (PlayMakerFSM fsm in t.GetComponents<PlayMakerFSM>())
                 parts.Add("FSM:" + fsm.FsmName);

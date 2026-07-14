@@ -152,6 +152,12 @@ namespace MOPR
                         continue;
 
                     item.ApplyToggle(true);
+
+                    // Модуль «Оптимизация предметов» выключен: цикл больше не крутит ProcessItems,
+                    // а значит FinalizePhysics не снимет settle-кинематику, выставленную ApplyToggle→
+                    // ReturnToRest. Без этого свободные предметы (в т.ч. груз в салоне) остаются
+                    // кинематическими навсегда и «приклеивают» машину к земле — возвращаем живую физику сразу.
+                    item.RestoreLivePhysics();
                     item.ToggleLOD(false);
                 }
                 catch (Exception ex)
@@ -371,14 +377,22 @@ namespace MOPR
         {
             float distance = Vector3.Distance(player.position, item.transform.position);
 
+            bool playerInCar = FsmManager.IsPlayerInCar();
+
             // В Performance порог ужимается: в машине вне двора — 20 м, иначе 50 м.
             bool toEnable = MoprSettings.Mode == PerformanceMode.Performance
-                ? IsEnabled(distance, FsmManager.IsPlayerInCar() && !isPlayerAtYard ? 20 : 50)
+                ? IsEnabled(distance, playerInCar && !isPlayerAtYard ? 20 : 50)
                 : IsEnabled(distance);
 
             if (toEnable)
             {
                 item.ToggleChangeFix();
+
+                // Игрок за рулём: свободно лежащие предметы рядом (в салоне/кузове) не должны
+                // оставаться кинематическими — иначе они работают неподвижными якорями и машина
+                // «застревает» (репорт Nexus: с грузом пива/пакетов машина плохо едет или стоит).
+                if (playerInCar)
+                    item.RestoreLivePhysics();
 
                 // Позицию грузим только после реального старта и если предмет включается.
                 if (ticks > 1 && !item.WasTransformLoaded)

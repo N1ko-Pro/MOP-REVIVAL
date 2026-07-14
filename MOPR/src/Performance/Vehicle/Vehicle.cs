@@ -207,7 +207,14 @@ namespace MOPR.Vehicles
             if (gameObject == null || !IsActive)
                 return;
 
-            if (rb.isKinematic == !enabled && carDynamics.enabled == enabled && rb.useGravity)
+            // Уже в целевом состоянии — тело повторно НЕ трогаем. Раньше в условие входил ещё
+            // rb.useGravity: если машина сама держит useGravity=false (кастомные UnityCar-моды,
+            // напр. Driveable Svoboda), MOPR каждый тик заново включал гравитацию и звал WakeUp, и
+            // камеру водителя, висящую на ConfigurableJoint, колбасило вверх-вниз. Под управлением
+            // MOPR гравитация всегда двигается ВМЕСТЕ с kinematic (см. присваивания ниже), поэтому
+            // для стоковых машин условие эквивалентно прежнему — но мы больше не воюем за useGravity
+            // с чужими скриптами. (То же упрощение уже используется в ForceToggleUnityCar.)
+            if (rb.isKinematic == !enabled && carDynamics.enabled == enabled)
                 return;
 
             // Не выключаем физику, пока машина движется или не на земле.

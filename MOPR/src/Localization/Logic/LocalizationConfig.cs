@@ -16,6 +16,7 @@ namespace MOPR.Localization
         private const string FileName = "language.txt";
         private const string RussianToken = "Russian";
         private const string EnglishToken = "English";
+        private const string PolishToken = "Polish";
 
         private static string filePath;
         private static bool loaded;
@@ -33,9 +34,12 @@ namespace MOPR.Localization
                 if (File.Exists(filePath))
                 {
                     string token = File.ReadAllText(filePath).Trim();
-                    LocalizationCore.Current = token.Equals(RussianToken, StringComparison.OrdinalIgnoreCase)
-                        ? Language.Russian
-                        : Language.English;
+                    if (token.Equals(RussianToken, StringComparison.OrdinalIgnoreCase))
+                        LocalizationCore.Current = Language.Russian;
+                    else if (token.Equals(PolishToken, StringComparison.OrdinalIgnoreCase))
+                        LocalizationCore.Current = Language.Polish;
+                    else
+                        LocalizationCore.Current = Language.English;
                 }
             }
             catch (Exception ex)
@@ -56,7 +60,11 @@ namespace MOPR.Localization
                 if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
                     Directory.CreateDirectory(directory);
 
-                File.WriteAllText(filePath, LocalizationCore.Current == Language.Russian ? RussianToken : EnglishToken);
+                string token =
+                    LocalizationCore.Current == Language.Russian ? RussianToken :
+                    LocalizationCore.Current == Language.Polish ? PolishToken :
+                    EnglishToken;
+                File.WriteAllText(filePath, token);
             }
             catch (Exception ex)
             {

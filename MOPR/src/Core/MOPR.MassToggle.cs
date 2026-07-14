@@ -121,6 +121,14 @@ namespace MOPR
                         item.SaveGame();
                         item.ToggleLOD(false);
                     }
+                    else if (enabled)
+                    {
+                        // Оптимизация выключается/сбрасывается (StopOptimization, Watchdog, mopr stop):
+                        // цикл предметов больше не крутится и не снимет settle-кинематику, выставленную
+                        // ApplyToggle→ReturnToRest. Возвращаем свободным предметам живую физику сразу —
+                        // иначе кинематический груз в салоне «приклеивает» машину к земле.
+                        item.RestoreLivePhysics();
+                    }
                 }
                 catch (Exception ex)
                 {

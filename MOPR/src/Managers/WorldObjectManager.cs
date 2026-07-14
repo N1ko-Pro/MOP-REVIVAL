@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using MSCLoader;
 
 using MOPR.Rules;
 using MOPR.Rules.Types;
@@ -81,9 +82,23 @@ namespace MOPR.Managers
                     obj = new SimpleObjectToggle(gameObject, disableOn, distance);
                     break;
                 case ToggleModes.Renderer:
+                    // Нет рендерера (контейнер вроде HUMANS или логический объект Randomizer) — не бросаем
+                    // исключение: раньше оно обрывало всю пачку регистрации каталога, и объекты после него
+                    // оставались без оптимизации. Просто пропускаем; для не-полного ignore-правила это
+                    // корректно означает «оставить объект в покое».
+                    if (gameObject.GetComponent<Renderer>() == null)
+                    {
+                        ModConsole.Log("[MOPR] Skipping renderer-toggle for \"" + gameObject.name + "\": no Renderer on the object.");
+                        return null;
+                    }
                     obj = new RendererToggle(gameObject, disableOn, distance);
                     break;
                 case ToggleModes.MultipleRenderers:
+                    if (gameObject.GetComponentsInChildren<Renderer>(true).Length == 0)
+                    {
+                        ModConsole.Log("[MOPR] Skipping multi-renderer-toggle for \"" + gameObject.name + "\": no Renderers found.");
+                        return null;
+                    }
                     obj = new MultipleRenderersToggle(gameObject, disableOn, distance);
                     break;
             }

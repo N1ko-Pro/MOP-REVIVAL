@@ -46,6 +46,12 @@ namespace MOPR.Items
                 return;
             }
 
+            // Был ли предмет реально выгружен (кинематически «заморожен»). Только тогда есть смысл
+            // возвращать его в сохранённую позу (анти-дрейф после реактивации). Если предмет всё это
+            // время оставался активным (игрок его переносил/положил рядом), его текущая позиция —
+            // истина: перетирать её старой savedPosition нельзя, иначе перемещённый предмет
+            // «откатывается» на прежнее место при сохранении (ToggleAll(true) на пред-сейве).
+            bool wasSuspended = !active;
             active = true;
 
             if (mode == ItemToggleMode.Full)
@@ -54,7 +60,7 @@ namespace MOPR.Items
                     gameObject.SetActive(true);
 
                 if (rb != null && IsFreeStanding())
-                    ReturnToRest(useGravity: false);
+                    ReturnToRest(useGravity: false, wasSuspended);
             }
             else // PhysicsOnly
             {
@@ -62,7 +68,7 @@ namespace MOPR.Items
                     renderer.enabled = true;
 
                 if (rb != null && IsFreeStanding())
-                    ReturnToRest(useGravity: true);
+                    ReturnToRest(useGravity: true, wasSuspended);
             }
 
             if (eventSound != null)
@@ -73,14 +79,21 @@ namespace MOPR.Items
         /// Возвращает свободный предмет в сохранённую позу и держит тело кинематическим до конца
         /// settle-окна (живую физику включит FinalizePhysics, когда опора уже реактивирована).
         /// </summary>
-        private void ReturnToRest(bool useGravity)
+        private void ReturnToRest(bool useGravity, bool wasSuspended)
         {
             rb.velocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
 
-            // Предметы на фиксированных местах — их позу не трогаем.
+            // Возврат к сохранённой позе — только для реально выгруженного предмета (анти-дрейф).
+            // Уже активный предмет мог быть перенесён игроком: его текущее положение и есть истина,
+            // поэтому обновляем им savedPosition (а не наоборот).
             if (PinsPosition)
-                transform.position = savedPosition;
+            {
+                if (wasSuspended)
+                    transform.position = savedPosition;
+                else
+                    savedPosition = transform.position;
+            }
 
             rb.detectCollisions = true;
             if (useGravity)
@@ -195,6 +208,29 @@ namespace MOPR.Items
             rb.detectCollisions = true;
             rb.useGravity = true;
             rb.isKinematic = false;
+        }
+
+        /// <summary>
+        /// Немедленно возвращает свободно лежащему предмету «живую» физику (снимает кинематику, будит
+        /// тело), обрывая settle. Нужно там, где предмет НЕ должен оставаться кинематическим, а штатный
+        /// FinalizePhysics этого не сделает, потому что цикл предметов не крутится:
+        ///   * игрок за рулём — кинематический груз в салоне работает якорем, машина «застревает»
+        ///     (репорт Nexus: пиво/пакеты/баллончики, режим PhysicsOnly, который ToggleChangeFix не трогал);
+        ///   * выключена «Оптимизация предметов» (или вся оптимизация) — цикл больше не снимет
+        ///     settle-кинематику, и свободные предметы «приклеивают» машину к земле.
+        /// Опора при этом активна (кузов/земля), settle не нужен. Удерживаемые в руке и прикрученные
+        /// (не свободнолежащие) не трогаем — их физику ведёт игра (иначе предмет выпадет из руки).
+        /// </summary>
+        internal void RestoreLivePhysics()
+        {
+            if (rb == null || !rb.isKinematic || !IsFreeStanding())
+                return;
+
+            settling = false;
+            rb.isKinematic = false;
+            rb.detectCollisions = true;
+            rb.useGravity = true;
+            rb.WakeUp();
         }
 
         #endregion

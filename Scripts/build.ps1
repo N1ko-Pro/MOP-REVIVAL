@@ -8,8 +8,9 @@
     dotnet SDK.
 
     Итоговый файл мода: MOPR.dll (имя сборки в проекте — MOPR; отображаемое имя в игре —
-    «MOP - REVIVAL»). При установке (deploy) DLL кладётся в <Mods>, а BouncyCastle.Crypto.dll —
-    в <Mods>\References (нужен моду для HTTPS/TLS 1.2 при синхронизации правил с сервером).
+    «MOP - REVIVAL»). При установке (deploy) DLL кладётся в <Mods>, а MOPRNET.dll — в
+    <Mods>\References (управляемый TLS 1.2 для синхронизации правил; это переименованная
+    BouncyCastle — отдельная зависимость с брендированным именем).
 
 .PARAMETER Mode
     Режим работы:
@@ -114,20 +115,30 @@ if ($Deploy) {
     Copy-Item $OutputDll -Destination $ModsDir -Force
     Write-Step "Deployed MOPR.dll -> $ModsDir" 'Green'
 
-    # 2) BouncyCastle.Crypto.dll -> <Mods>\References
-    #    Даёт моду управляемый TLS 1.2 для связи с сервером правил (старый Mono игры этого не умеет).
-    #    В проекте он подключён с Private=false, поэтому рядом с MOPR.dll не копируется — кладём вручную.
-    $BouncySrc = Join-Path $RepoRoot 'Libs\BouncyCastle.Crypto.dll'
-    if (Test-Path $BouncySrc) {
+    # 2) MOPRNET.dll -> <Mods>\References
+    #    Управляемый TLS 1.2 для связи с сервером правил (старый Mono игры этого не умеет). Это
+    #    переименованная BouncyCastle (брендированное имя, чтобы не пугать игроков). Подключена с
+    #    Private=false, поэтому рядом с MOPR.dll не копируется — кладём вручную.
+    #    Заодно убираем устаревшие копии (BouncyCastle.Crypto.dll, MOPR.Lib.dll) от прежних версий.
+    $LibSrc = Join-Path $RepoRoot 'Libs\MOPRNET.dll'
+    if (Test-Path $LibSrc) {
         $RefDst = Join-Path $ModsDir 'References'
         if (-not (Test-Path $RefDst)) {
             New-Item -ItemType Directory -Path $RefDst | Out-Null
         }
-        Copy-Item $BouncySrc -Destination $RefDst -Force
-        Write-Step "Deployed BouncyCastle.Crypto.dll -> $RefDst" 'Green'
+        Copy-Item $LibSrc -Destination $RefDst -Force
+        Write-Step "Deployed MOPRNET.dll -> $RefDst" 'Green'
+
+        foreach ($stale in 'BouncyCastle.Crypto.dll', 'MOPR.Lib.dll') {
+            $StalePath = Join-Path $RefDst $stale
+            if (Test-Path $StalePath) {
+                Remove-Item $StalePath -Force
+                Write-Step "Removed stale $stale -> $StalePath" 'Yellow'
+            }
+        }
     }
     else {
-        Write-Step "BouncyCastle not found at $BouncySrc (rule syncing may not work)." 'Yellow'
+        Write-Step "MOPRNET.dll not found at $LibSrc (rule syncing may not work)." 'Yellow'
     }
 
     # 3) Для Debug дополнительно копируем .pdb (символы для отладки/читаемых стектрейсов).

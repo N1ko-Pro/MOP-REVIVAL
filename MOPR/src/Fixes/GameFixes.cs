@@ -376,7 +376,9 @@ namespace MOPR
         private static void GenericObjectHuman(Transform t)
         {
             WorldObjects.GenericObject human = WorldObjectManager.Instance.Add(t.gameObject, DisableOn.Distance);
-            human.MinimumToggleDistance = 150;
+            // Add может вернуть null (объект под ignore-правилом или без рендерера) — тогда не трогаем.
+            if (human != null)
+                human.MinimumToggleDistance = 150;
         }
 
         /// <summary>Фикс: капот «выскакивает» из машины при загрузке.</summary>

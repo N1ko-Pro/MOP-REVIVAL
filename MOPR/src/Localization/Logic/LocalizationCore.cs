@@ -13,7 +13,8 @@ namespace MOPR.Localization
     internal enum Language
     {
         English = 0,
-        Russian = 1
+        Russian = 1,
+        Polish = 2
     }
 
     internal static class LocalizationCore
@@ -35,6 +36,7 @@ namespace MOPR.Localization
 
         private static readonly Dictionary<string, string> English = BuildTable(Language.English);
         private static readonly Dictionary<string, string> Russian = BuildTable(Language.Russian);
+        private static readonly Dictionary<string, string> Polish = BuildTable(Language.Polish);
 
         /// <summary>Меняет язык (если отличается) и уведомляет слушателей.</summary>
         public static void SetCurrent(Language language)
@@ -56,7 +58,10 @@ namespace MOPR.Localization
         /// <summary>Разрешает ключ по цепочке «текущий язык → английский → сам ключ».</summary>
         private static string Resolve(string key)
         {
-            Dictionary<string, string> table = Current == Language.Russian ? Russian : English;
+            Dictionary<string, string> table =
+                Current == Language.Russian ? Russian :
+                Current == Language.Polish ? Polish :
+                English;
             if (table.TryGetValue(key, out string value))
                 return value;
 
@@ -84,9 +89,10 @@ namespace MOPR.Localization
 
         private static Dictionary<string, string> BuildTable(Language language)
         {
+            // Строки разложены по одному файлу на язык (LocEN/LocRU/LocPL) и берутся через LocTextCore;
+            // копируем в свой словарь с Ordinal-сравнением, чтобы движок владел таблицей.
             Dictionary<string, string> table = new Dictionary<string, string>(StringComparer.Ordinal);
             Merge(table, LocTextCore.For(language));
-            Merge(table, LocTextLog.For(language));
             return table;
         }
 

@@ -67,7 +67,7 @@ namespace MOPR.Interface.Gui
 
             MoprSettings.Language = Settings.AddDropDownList(
                 "mopr_language", "",
-                new[] { "English", "Русский" }, (int)LocalizationCore.Current, OnLanguageChanged);
+                new[] { "English", "Русский", "Polski" }, (int)LocalizationCore.Current, OnLanguageChanged);
 
             // Прячем пустую подпись дропдауна — убирает лишний отступ над списком. Делаем отложенно:
             // MSCLoader создаёт UI-элемент только при открытии страницы настроек.
@@ -276,7 +276,16 @@ namespace MOPR.Interface.Gui
         private static void OnLanguageChanged()
         {
             int index = MoprSettings.Language != null ? MoprSettings.Language.GetSelectedItemIndex() : 0;
-            LocalizationCore.SetCurrent(index == (int)Language.Russian ? Language.Russian : Language.English);
+
+            Language selected;
+            switch (index)
+            {
+                case (int)Language.Russian: selected = Language.Russian; break;
+                case (int)Language.Polish: selected = Language.Polish; break;
+                default: selected = Language.English; break;
+            }
+
+            LocalizationCore.SetCurrent(selected);
             LocalizationConfig.Save();
             LocalizedUi.RefreshAll();
         }

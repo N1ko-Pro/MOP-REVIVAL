@@ -65,9 +65,14 @@
     </Reference>
     <Reference Include="System.Drawing" />
     <!-- Управляемый TLS 1.2 для загрузки правил (старый Mono игры не умеет совр. TLS).
-         В рантайме DLL лежит в папке игры Mods\References, поэтому не копируем. -->
-    <Reference Include="BouncyCastle.Crypto">
-      <HintPath>..\Libs\BouncyCastle.Crypto.dll</HintPath>
+         MOPRNET.dll — это BouncyCastle.Crypto, пересобранная с переименованием идентичности сборки
+         (типы/пространства имён Org.BouncyCastle.* внутри не менялись), чтобы игроков не пугало
+         незнакомое имя «BouncyCastle.Crypto». В рантайме лежит в Mods\References, поэтому не копируем.
+         Регенерация после обновления BouncyCastle (через Mono.Cecil): asm.Name.Name = "MOPRNET",
+         снять strong-name (очистить PublicKey/HasPublicKey и флаг StrongNameSigned), сохранить как
+         MOPRNET.dll. -->
+    <Reference Include="MOPRNET">
+      <HintPath>..\Libs\MOPRNET.dll</HintPath>
       <Private>false</Private>
     </Reference>
   </ItemGroup>
