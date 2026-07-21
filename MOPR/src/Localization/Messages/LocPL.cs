@@ -55,6 +55,8 @@ namespace MOPR.Localization
             { "settings.dynamic_draw_hint", "<color=#9AA6B2>Automatycznie obniża odległość rysowania w środku budynków i blisko domu.</color>" },
             { "settings.sector_cull", "Ukrywanie krajobrazu" },
             { "settings.sector_cull_hint", "<color=#9AA6B2>Chowa zbędny krajobraz, gdy jesteś w środku.</color>" },
+            { "settings.water_reflections", "Optymalizuj odbicia wody" },
+            { "settings.water_reflections_hint", "<color=#9AA6B2>Usuwa kamerę odbić jeziora. Woda staje się płaska.</color>" },
             { "settings.engine_patches", "Optymalizuj kod silnika gry" },
             { "settings.engine_patches_hint", "<color=#9AA6B2>Przyspiesza wewnętrzny kod gry. Obowiązuje przy kolejnym wczytaniu.</color>" },
             { "settings.sleep_bodies", "Optymalizacja fizyki" },

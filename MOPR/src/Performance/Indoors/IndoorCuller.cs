@@ -66,6 +66,11 @@ namespace MOPR.Indoors
             AddFind("MAP/MESH/FOLIAGE/LAKE_VEGETATION");
             AddFind("MAP/RadioMast");
             AddFind("MAP/LakeSimple/Tile");
+            // MAP/LakeNice несёт зеркальную поверхность/камеру отражений озера. Резолвим его всегда,
+            // но под культинг он попадает ТОЛЬКО когда включена «Оптимизация отражений воды»
+            // (см. DesiredActive). По умолчанию (оптимизация выключена) LakeNice остаётся активным,
+            // иначе SetActive(false) погасил бы камеру отражений и вода стала бы плоской и статичной.
+            // Плоская запасная вода LakeSimple/Tile отражений не даёт и культится безопасно.
             AddFind("MAP/LakeNice");
 
             // Правило ignore для группы выводит её из-под управления культингом.
@@ -130,6 +135,10 @@ namespace MOPR.Indoors
         /// <summary>Должна ли группа быть активна: Quality-исключение и whitelist сектора → да, иначе «не в секторе».</summary>
         private static bool DesiredActive(GameObject obj, bool inSector, bool quality)
         {
+            // Пока «Оптимизация отражений воды» выключена — LakeNice всегда активен (несёт камеру отражений озера).
+            if (!MoprSettings.OptimizeWaterReflectionsOn && obj.name == "LakeNice")
+                return true;
+
             if (quality && obj.name.ContainsAny(QualityModeIgnore))
                 return true;
 

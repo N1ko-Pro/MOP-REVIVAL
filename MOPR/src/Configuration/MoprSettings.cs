@@ -56,6 +56,10 @@ namespace MOPR.Common
 
         // Графика.
         public static SettingsCheckBox AdjustShadows, DynamicDrawDistanceEnabled, SectorCulling, LimitFramerate, RunInBackground;
+
+        // Оптимизация отражений воды: разрешить культинг камеры отражений озера (LakeNice) в помещениях.
+        // По умолчанию выключено (отражения сохраняются).
+        public static SettingsCheckBox WaterReflections;
         public static SettingsSliderInt ShadowDistance, FramerateLimit;
 
         // Исправления / прочее.
@@ -137,6 +141,11 @@ namespace MOPR.Common
         public static bool RunInBackgroundOn => RunInBackground == null || RunInBackground.GetValue();
         public static bool DynamicDrawDistanceOn => DynamicDrawDistanceEnabled == null || DynamicDrawDistanceEnabled.GetValue();
         public static bool SectorCullingOn => SectorCulling == null || SectorCulling.GetValue();
+
+        // Оптимизация отражений воды (по умолчанию ВЫКЛючена). Когда включено — LakeNice попадает под
+        // культинг в помещениях/секторах (экономия), ценой плоской статичной воды. Когда выключено —
+        // озеро сохраняет камеру отражений/зеркальную поверхность (поведение по умолчанию).
+        public static bool OptimizeWaterReflectionsOn => WaterReflections != null && WaterReflections.GetValue();
 
         // Глубокая оптимизация Сатсумы за рулём (по умолчанию включена).
         public static bool SatsumaDrivingModeOn => SatsumaDrivingMode == null || SatsumaDrivingMode.GetValue();

@@ -3,6 +3,36 @@
 All notable changes to **MOPR (Modern Optimization Plugin — Revival)** are documented here.
 Version numbers follow the original MOP scheme; `b` marks a beta build.
 
+## 4.0.3b (21.07.2026)
+
+Stability release focused on two hard-to-diagnose gameplay bugs — the black screen on
+sleep and the kilju bucket spilling on load — plus a new optional water-reflection
+optimization for players who want a few more frames near the lake.
+
+### Added
+
+- **Water reflection optimization toggle** (Graphics, default **off**) — when enabled, the
+  lake's reflection camera (`LakeNice`) is allowed to be culled indoors and in far sectors,
+  saving frames at the cost of flat, static water. Left **off** by default, so vanilla lake
+  reflections are preserved unless you opt in.
+
+### Bug Fixes
+
+- **Fixed the black screen / frozen state when going to sleep.** As soon as the character
+  closed their eyes the screen went black, the HUD and sound disappeared, gestures stopped
+  working and the framerate dropped — with no crash and no error log. The cause was in the
+  `Fsm.UpdateDelayedEvents` engine patch: it iterated PlayMaker's live delayed-event list and
+  removed entries in place, but `DelayedEvent.Update()` **fires** its event when the timer
+  elapses, which can re-enter and mutate that same list. The sleep "wake up / restore view"
+  event was dropped, leaving the screen black forever. The patch now faithfully replicates
+  PlayMaker's original snapshot-based algorithm (tick a copy of the list, remove finished
+  events afterwards), so re-entrant changes can no longer lose an event.
+- **Fixed the kilju bucket spilling every time the save is loaded.** MOP disabled the bucket
+  lid's `Removal` FSM on unload and re-enabled it (plus zeroed its local rotation) on reload;
+  because a PlayMaker FSM restarts from its initial state when re-enabled, this replayed the
+  "lid removed" step on every load and spilled the kilju even when the player had done nothing.
+  The bucket lid is now left entirely to its vanilla FSM.
+
 ## 4.0.1b (13.07.2026)
 
 Compatibility release: an escape hatch for full Satsuma-overhaul mods, tooling for authoring

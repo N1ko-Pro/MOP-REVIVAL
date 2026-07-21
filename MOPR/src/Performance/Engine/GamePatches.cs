@@ -6,7 +6,8 @@
 //     каждый раз «пачкает» иерархию и синхронизацию физики.
 //   * ActionHelpers.MousePick/IsMouseOver — кэш рейкастов по КАЖДОЙ маске за кадр. Встроенный кэш
 //     игры держит лишь один (distance, layerMask) и «пробуксовывает» при чередовании масок.
-//   * Fsm.UpdateDelayedEvents — исправление O(n)-удаления (RemoveAt(i--) вместо перебора).
+//   * Fsm.UpdateDelayedEvents — точная замена оригинала (снимок delayedEvents перед тиком: Update()
+//     может отправить событие и реентрантно изменить список, поэтому удаляем завершённые после прохода).
 // Все префиксы возвращают false, чтобы заменить оригинал, сохраняя его наблюдаемое поведение.
 
 using System.Collections.Generic;
@@ -63,18 +64,42 @@ namespace MOPR.Performance.Engine
 
         #endregion
 
-        #region FSM: исправление удаления DelayedEvents
+        #region FSM: обновление отложенных событий
 
+        // Снимок-буферы, чтобы не аллоцировать список каждый кадр. Метод вызывается из главного
+        // потока Unity (FsmComponent.Update), поэтому статические буферы безопасны.
+        private static readonly List<DelayedEvent> updateBuffer = new List<DelayedEvent>();
+        private static readonly List<DelayedEvent> removeBuffer = new List<DelayedEvent>();
+
+        // ВАЖНО: DelayedEvent.Update() не просто тикает таймер — по истечении он ОТПРАВЛЯЕТ событие
+        // (Fsm.Event → UpdateStateChanges), а это может СТАРТОВАТЬ новые состояния и добавить/убрать
+        // отложенные события ТОГО ЖЕ FSM. Поэтому оригинал PlayMaker снимает копию delayedEvents,
+        // тикает по копии, а удаляет завершённые после прохода. Если тикать по «живому» списку и
+        // удалять на месте (RemoveAt(i--)), реентрантная мутация внутри Update() приводит к пропуску
+        // или потере событий. Практический симптом в MSC: при засыпании отложенное событие «проснуться/
+        // вернуть картинку» теряется — экран остаётся чёрным навсегда, HUD/звук/жесты пропадают, игра
+        // при этом не падает. Здесь точно воспроизводим безопасный по реентрантности алгоритм оригинала.
         private static bool Fsm_UpdateDelayedEvents(Fsm __instance)
         {
-            for (int i = 0; i < __instance.DelayedEvents.Count; i++)
+            List<DelayedEvent> delayed = __instance.DelayedEvents;
+
+            updateBuffer.Clear();
+            removeBuffer.Clear();
+            updateBuffer.AddRange(delayed);
+
+            for (int i = 0; i < updateBuffer.Count; i++)
             {
-                DelayedEvent e = __instance.DelayedEvents[i];
+                DelayedEvent e = updateBuffer[i];
                 e.Update();
                 if (e.Finished)
-                    __instance.DelayedEvents.RemoveAt(i--);
+                    removeBuffer.Add(e);
             }
 
+            for (int i = 0; i < removeBuffer.Count; i++)
+                delayed.Remove(removeBuffer[i]);
+
+            updateBuffer.Clear();
+            removeBuffer.Clear();
             return false;
         }
 

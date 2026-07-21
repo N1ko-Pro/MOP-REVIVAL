@@ -295,10 +295,15 @@ namespace MOPR.Items
                     if (fire != null)
                         fire.gameObject.SetActive(false);
                     break;
-                // Крышка ведра: отключаем removalFSM, чтобы не отсоединялась, пока игрок далеко.
+                // Крышка ведра килью: НЕ трогаем её Removal-FSM.
+                //
+                // Раньше MOPR выключал removalFSM при выгрузке (OnSuspendSpecial) и включал обратно в
+                // ToggleChangeFix, дополнительно обнуляя localEulerAngles. Но PlayMaker-FSM при повторном
+                // enable перезапускается с начального состояния: на загрузке/продолжении это переигрывало
+                // «снятие крышки», из-за чего у запечатанного ведра слетала крышка и разливалось килью
+                // КАЖДЫЙ раз (репорт Nexus), даже когда игрок ничего не варил. Оставляем крышку как есть —
+                // ванильный FSM сам управляет её состоянием, а экономии от её выключения нет.
                 case "bucket lid(itemx)":
-                    if (removalFSM != null)
-                        removalFSM.enabled = false;
                     break;
                 // Пустая канистра у свалки: переименовываем и делаем подбираемой.
                 case "emptyca":
@@ -319,18 +324,13 @@ namespace MOPR.Items
         /// <summary>Активен ли предмет с точки зрения оптимизации (в PhysicsOnly — по detectCollisions).</summary>
         public bool ActiveSelf => (mode == ItemToggleMode.PhysicsOnly && rb != null) ? rb.detectCollisions : gameObject.activeSelf;
 
-        /// <summary>Чинит крышку ведра, восстанавливает рендер и «живую» физику при повторном включении.</summary>
+        /// <summary>Восстанавливает рендер и «живую» физику при повторном включении.</summary>
         internal void ToggleChangeFix()
         {
-            // Фикс: крышка ведра отсоединяется, пока игрок далеко.
-            if (gameObject.name == "bucket lid(itemx)")
-            {
-                if (transform.parent != null && transform.parent.gameObject.name == "PivotLid" && removalFSM != null)
-                {
-                    removalFSM.enabled = true;
-                    transform.localEulerAngles = Vector3.zero;
-                }
-            }
+            // ВНИМАНИЕ: крышку ведра килью (bucket lid(itemx)) здесь НЕ трогаем.
+            // Ранее тут стоял re-enable removalFSM + обнуление localEulerAngles — это переигрывало
+            // «снятие крышки» на загрузке и разливало килью каждый раз. Управление крышкой полностью
+            // отдано ванильному FSM (см. OnSuspendSpecial).
 
             // Дальнейшее — только для предметов в режиме полного переключения.
             if (mode != ItemToggleMode.Full)

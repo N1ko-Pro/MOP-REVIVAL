@@ -21,6 +21,7 @@ namespace MOPR.Vehicles.Managers.SatsumaManagers
         private float objectMass;
         private FsmFloat carMass;
         private bool isClean;
+        private bool massApplied;
 
         private void Awake()
         {
@@ -62,14 +63,24 @@ namespace MOPR.Vehicles.Managers.SatsumaManagers
                 }
             }
 
-            if (gameObject.transform.root.gameObject == Satsuma.Instance.gameObject)
+            if (carMass != null && !massApplied && gameObject.transform.root.gameObject == Satsuma.Instance.gameObject)
+            {
                 carMass.Value += objectMass;
+                massApplied = true;
+            }
         }
 
         private void OnDisable()
         {
-            if (gameObject.transform.root.gameObject == Satsuma.Instance.gameObject)
+            // Строго парно с OnEnable: вычитаем ровно один раз, если масса была прибавлена. Проверку
+            // по текущему root тут делать НЕЛЬЗЯ — если деталь сняли (root уже рука/ItemPivot), а затем
+            // объект выключился культингом, вычитание бы пропустилось и масса «утекала» вверх, из-за
+            // чего Сатсума со временем становилась «слишком тяжёлой» (задняя ось не могла её сдвинуть).
+            if (carMass != null && massApplied)
+            {
                 carMass.Value -= objectMass;
+                massApplied = false;
+            }
         }
 
         private static void RemoveActionAt(PlayMakerFSM fsm, string stateName, int index)

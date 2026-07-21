@@ -23,7 +23,7 @@ namespace MOPR.FSM
 
         public static PlayMakerFSM GetPlayMaker(this Transform t, string name)
         {
-            return GetPlayMaker(t.gameObject, name);
+            return t == null ? null : GetPlayMaker(t.gameObject, name);
         }
 
         /// <summary>Состояние FSM по имени (или null).</summary>
@@ -50,11 +50,14 @@ namespace MOPR.FSM
         /// <summary>Внедряет C#-колбэк в состояние FSM (замена MSCLoader FsmHook.FsmInject).</summary>
         public static void FsmInject(this GameObject gm, string name, Action action)
         {
-            PlayMakerFSM fsm = gm.GetComponent<PlayMakerFSM>();
+            PlayMakerFSM fsm = gm == null ? null : gm.GetComponent<PlayMakerFSM>();
             if (!fsm)
                 return;
 
             FsmState state = fsm.GetState(name);
+            if (state == null)
+                return;
+
             List<FsmStateAction> actions = state.Actions.ToList();
             actions.Add(new CustomStateAction(action));
             state.Actions = actions.ToArray();

@@ -52,7 +52,6 @@ namespace MOPR.Items
         private bool isObjectOnGrill;
         private bool kiljuInitialReset;
         private bool fsmFixesOnActive;
-        private PlayMakerFSM removalFSM;
         private EventSounds eventSound;
 
         private LodObject dummy;
@@ -115,7 +114,6 @@ namespace MOPR.Items
             }
 
             savedPosition = transform.position;
-            removalFSM = gameObject.GetPlayMaker("Removal");
 
             // Шлем: минимальная инициализация (иначе баг с невозможностью снова надеть).
             if (gameObject.name == "helmet(itemx)")

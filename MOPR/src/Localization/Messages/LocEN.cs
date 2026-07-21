@@ -54,6 +54,8 @@ namespace MOPR.Localization
             { "settings.dynamic_draw_hint", "<color=#9AA6B2>Automatically lowers draw distance indoors and near home.</color>" },
             { "settings.sector_cull", "Indoor scene culling" },
             { "settings.sector_cull_hint", "<color=#9AA6B2>Hides unnecessary outdoor scenery while you're indoors.</color>" },
+            { "settings.water_reflections", "Optimize water reflections" },
+            { "settings.water_reflections_hint", "<color=#9AA6B2>Culls the lake's reflection camera. The water becomes flat.</color>" },
             { "settings.engine_patches", "Optimize game engine code" },
             { "settings.engine_patches_hint", "<color=#9AA6B2>Speeds up the game's internal code. Applies on the next load.</color>" },
             { "settings.sleep_bodies", "Physics optimization" },

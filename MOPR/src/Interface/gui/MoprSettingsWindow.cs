@@ -131,6 +131,10 @@ namespace MOPR.Interface.Gui
             LocalizedUi.Label(MoprSettings.SleepDistantBodies, "settings.sleep_bodies");
             LocalizedUi.Text(Settings.AddText(LocalizationCore.Get("settings.sleep_bodies_hint")), "settings.sleep_bodies_hint");
 
+            MoprSettings.WaterReflections = Settings.AddCheckBox("mopr_water_reflections", LocalizationCore.Get("settings.water_reflections"), false);
+            LocalizedUi.Label(MoprSettings.WaterReflections, "settings.water_reflections");
+            LocalizedUi.Text(Settings.AddText(LocalizationCore.Get("settings.water_reflections_hint")), "settings.water_reflections_hint");
+
             Spacer();
 
             // Графические оптимизации.

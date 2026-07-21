@@ -53,6 +53,8 @@ namespace MOPR.Localization
             { "settings.dynamic_draw_hint", "<color=#9AA6B2>Автоматически снижает дальность прорисовки в помещениях и у дома.</color>" },
             { "settings.sector_cull", "Отсечение сцены в помещениях" },
             { "settings.sector_cull_hint", "<color=#9AA6B2>В помещениях скрывает ненужный внешний пейзаж.</color>" },
+            { "settings.water_reflections", "Оптимизировать отражения воды" },
+            { "settings.water_reflections_hint", "<color=#9AA6B2>В помещениях отсекает камеру отражений озера. Вода становится плоской.</color>" },
             { "settings.engine_patches", "Оптимизация кода движка игры" },
             { "settings.engine_patches_hint", "<color=#9AA6B2>Ускоряет внутренний код игры. Действует со следующей загрузки.</color>" },
             { "settings.sleep_bodies", "Оптимизация физики" },

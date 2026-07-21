@@ -42,8 +42,10 @@ namespace MOPR
             // Сброс GT-решётки при активации.
             try
             {
-                foreach (PlayMakerFSM fsm in GameObject.Find("grille gt(Clone)").GetComponents<PlayMakerFSM>())
-                    fsm.Fsm.RestartOnEnable = false;
+                GameObject grilleGt = GameObject.Find("grille gt(Clone)");
+                if (grilleGt != null)
+                    foreach (PlayMakerFSM fsm in grilleGt.GetComponents<PlayMakerFSM>())
+                        fsm.Fsm.RestartOnEnable = false;
             }
             catch (Exception ex)
             {
@@ -95,18 +97,21 @@ namespace MOPR
             }
 
             // Предметы коттеджа исчезают при перемещении — отвязываем от родителя.
+            SetParent(null, "coffee pan(itemx)");
+            SetParent(null, "lantern(itemx)");
+            SetParent(null, "coffee cup(itemx)");
+            SetParent(null, "camera(itemx)");
+            SetParent(null, "fireworks bag(itemx)");
+            SetParent(null, "FishAreaAVERAGE");
+            SetParent(null, "FishAreaBAD");
+            SetParent(null, "FishAreaGOOD");
+            SetParent(null, "FishAreaGOOD2");
             try
             {
-                GameObject.Find("coffee pan(itemx)").transform.parent = null;
-                GameObject.Find("lantern(itemx)").transform.parent = null;
-                GameObject.Find("coffee cup(itemx)").transform.parent = null;
-                GameObject.Find("camera(itemx)").transform.parent = null;
-                GameObject.Find("fireworks bag(itemx)").transform.parent = null;
-                GameObject.Find("FishAreaAVERAGE").transform.parent = null;
-                GameObject.Find("FishAreaBAD").transform.parent = null;
-                GameObject.Find("FishAreaGOOD").transform.parent = null;
-                GameObject.Find("FishAreaGOOD2").transform.parent = null;
-                GameObject.Find("COTTAGE").transform.Find("MESH/Cottage_chimney").parent = null;
+                Transform cottage = GameObject.Find("COTTAGE")?.transform;
+                Transform chimney = cottage == null ? null : cottage.Find("MESH/Cottage_chimney");
+                if (chimney != null)
+                    chimney.parent = null;
             }
             catch (Exception ex)
             {
@@ -116,22 +121,42 @@ namespace MOPR
             // Такси (FITTAN/KUSKI): при посадке игрока отвязываем машину от родителя.
             try
             {
-                GameObject fittan = GameObject.Find("TRAFFIC").transform.Find("VehiclesDirtRoad/Rally/FITTAN").gameObject;
-                GameObject kuski = GameObject.Find("NPC_CARS").transform.Find("KUSKI").gameObject;
-                fittan.transform.Find("PlayerTrigger/DriveTrigger").gameObject.FsmInject("Player in car", () => fittan.transform.parent = null);
-                kuski.transform.Find("PlayerTrigger/DriveTrigger").gameObject.FsmInject("Player in car", () => kuski.transform.parent = null);
+                GameObject traffic = GameObject.Find("TRAFFIC");
+                GameObject npcCars = GameObject.Find("NPC_CARS");
+
+                Transform fittanTransform = traffic == null ? null : traffic.transform.Find("VehiclesDirtRoad/Rally/FITTAN");
+                Transform kuskiTransform = npcCars == null ? null : npcCars.transform.Find("KUSKI");
+
+                if (fittanTransform != null)
+                {
+                    GameObject fittan = fittanTransform.gameObject;
+                    Transform fittanTrigger = fittan.transform.Find("PlayerTrigger/DriveTrigger");
+                    if (fittanTrigger != null)
+                        fittanTrigger.gameObject.FsmInject("Player in car", () => fittan.transform.parent = null);
+                }
+
+                if (kuskiTransform != null)
+                {
+                    GameObject kuski = kuskiTransform.gameObject;
+                    Transform kuskiTrigger = kuski.transform.Find("PlayerTrigger/DriveTrigger");
+                    if (kuskiTrigger != null)
+                        kuskiTrigger.gameObject.FsmInject("Player in car", () => kuski.transform.parent = null);
+                }
             }
             catch (Exception ex)
             {
                 ExceptionManager.New(ex, true, "TAXI_MANAGERS_ERROR");
             }
 
-            Transform cabin = GameObject.Find("CABIN").transform;
+            Transform cabin = GameObject.Find("CABIN")?.transform;
 
             // Ставка в «Вентти» сбрасывалась при загрузке кабины.
             try
             {
-                cabin.Find("Cabin/Ventti/Table/GameManager").GetPlayMaker("Use").Fsm.RestartOnEnable = false;
+                Transform venttiManager = cabin == null ? null : cabin.Find("Cabin/Ventti/Table/GameManager");
+                PlayMakerFSM venttiUse = venttiManager.GetPlayMaker("Use");
+                if (venttiUse != null)
+                    venttiUse.Fsm.RestartOnEnable = false;
             }
             catch (Exception ex)
             {
@@ -141,7 +166,10 @@ namespace MOPR
             // Сброс двери кабины.
             try
             {
-                cabin.Find("Cabin/Door/Pivot/Handle").gameObject.GetComponent<PlayMakerFSM>().Fsm.RestartOnEnable = false;
+                Transform doorHandle = cabin == null ? null : cabin.Find("Cabin/Door/Pivot/Handle");
+                PlayMakerFSM doorFsm = doorHandle == null ? null : doorHandle.gameObject.GetComponent<PlayMakerFSM>();
+                if (doorFsm != null)
+                    doorFsm.Fsm.RestartOnEnable = false;
             }
             catch (Exception ex)
             {
@@ -155,7 +183,9 @@ namespace MOPR
                 for (; GameObject.Find("JunkCar" + junkCarCounter) != null; junkCarCounter++)
                 {
                     GameObject junk = GameObject.Find("JunkCar" + junkCarCounter);
-                    junk.GetComponent<PlayMakerFSM>().Fsm.RestartOnEnable = false;
+                    PlayMakerFSM junkFsm = junk.GetComponent<PlayMakerFSM>();
+                    if (junkFsm != null)
+                        junkFsm.Fsm.RestartOnEnable = false;
                     WorldObjectManager.Instance.Add(junk, DisableOn.Distance);
                 }
             }
@@ -168,13 +198,14 @@ namespace MOPR
             try
             {
                 GameObject humans = GameObject.Find("HUMANS");
-                foreach (Transform t in humans.GetComponentsInChildren<Transform>().Where(t => t.parent == humans.transform))
-                {
-                    if (t.gameObject.name.EqualsAny("HUMANS", "Fighter2", "Farmer", "FighterPub"))
-                        continue;
+                if (humans != null)
+                    foreach (Transform t in humans.GetComponentsInChildren<Transform>().Where(t => t.parent == humans.transform))
+                    {
+                        if (t.gameObject.name.EqualsAny("HUMANS", "Fighter2", "Farmer", "FighterPub"))
+                            continue;
 
-                    GenericObjectHuman(t);
-                }
+                        GenericObjectHuman(t);
+                    }
             }
             catch (Exception ex)
             {
@@ -185,7 +216,11 @@ namespace MOPR
             try
             {
                 foreach (GameObject wasphive in Resources.FindObjectsOfTypeAll<GameObject>().Where(g => g.name == "WaspHive"))
-                    wasphive.GetComponent<PlayMakerFSM>().Fsm.RestartOnEnable = false;
+                {
+                    PlayMakerFSM waspFsm = wasphive.GetComponent<PlayMakerFSM>();
+                    if (waspFsm != null)
+                        waspFsm.Fsm.RestartOnEnable = false;
+                }
             }
             catch (Exception ex)
             {
@@ -197,11 +232,13 @@ namespace MOPR
             {
                 GameObject hand = GameObject.Find("PLAYER/Pivot/AnimPivot/Camera/FPSCamera/1Hand_Assemble/Hand");
                 PlayMakerFSM pickUp = hand.GetPlayMaker("PickUp");
-
-                pickUp.GetState("Drop part").RemoveAction(0);
-                pickUp.GetState("Drop part 2").RemoveAction(0);
-                pickUp.GetState("Tool picked").RemoveAction(2);
-                pickUp.GetState("Drop tool").RemoveAction(0);
+                if (pickUp != null)
+                {
+                    pickUp.GetState("Drop part")?.RemoveAction(0);
+                    pickUp.GetState("Drop part 2")?.RemoveAction(0);
+                    pickUp.GetState("Tool picked")?.RemoveAction(2);
+                    pickUp.GetState("Drop tool")?.RemoveAction(0);
+                }
             }
             catch (Exception ex)
             {
@@ -270,7 +307,11 @@ namespace MOPR
             {
                 Transform triggerWindowWrap = GameObject.Find("YARD").transform.Find("Building/BEDROOM1/trigger_window_wrap");
                 if (triggerWindowWrap != null)
-                    triggerWindowWrap.GetComponent<PlayMakerFSM>().Fsm.RestartOnEnable = false;
+                {
+                    PlayMakerFSM windowWrapFsm = triggerWindowWrap.GetComponent<PlayMakerFSM>();
+                    if (windowWrapFsm != null)
+                        windowWrapFsm.Fsm.RestartOnEnable = false;
+                }
             }
             catch (Exception ex)
             {
@@ -282,7 +323,11 @@ namespace MOPR
             {
                 GameObject triggerDiskette = Resources.FindObjectsOfTypeAll<GameObject>().FirstOrDefault(g => g.name == "TriggerDiskette");
                 if (triggerDiskette != null)
-                    triggerDiskette.GetPlayMaker("Assembly").Fsm.RestartOnEnable = false;
+                {
+                    PlayMakerFSM disketteFsm = triggerDiskette.GetPlayMaker("Assembly");
+                    if (disketteFsm != null)
+                        disketteFsm.Fsm.RestartOnEnable = false;
+                }
                 else
                     ModConsole.Log("[MOPR] Trigger diskette was null");
             }
@@ -296,7 +341,11 @@ namespace MOPR
             {
                 GameObject triggerPlayMode = Resources.FindObjectsOfTypeAll<GameObject>().FirstOrDefault(g => g.name == "TriggerPlayMode");
                 if (triggerPlayMode != null)
-                    triggerPlayMode.GetPlayMaker("PlayerTrigger").Fsm.RestartOnEnable = false;
+                {
+                    PlayMakerFSM playModeFsm = triggerPlayMode.GetPlayMaker("PlayerTrigger");
+                    if (playModeFsm != null)
+                        playModeFsm.Fsm.RestartOnEnable = false;
+                }
                 else
                     ModConsole.Log("[MOPR] Trigger play mode was null");
             }
@@ -308,7 +357,11 @@ namespace MOPR
             // Навык сбора ягод сбрасывался.
             try
             {
-                GameObject.Find("JOBS").transform.Find("StrawberryField").gameObject.GetComponent<PlayMakerFSM>().Fsm.RestartOnEnable = false;
+                GameObject jobs = GameObject.Find("JOBS");
+                Transform strawberryField = jobs == null ? null : jobs.transform.Find("StrawberryField");
+                PlayMakerFSM strawberryFsm = strawberryField == null ? null : strawberryField.gameObject.GetComponent<PlayMakerFSM>();
+                if (strawberryFsm != null)
+                    strawberryFsm.Fsm.RestartOnEnable = false;
             }
             catch (Exception ex)
             {
@@ -321,11 +374,15 @@ namespace MOPR
                 GameObject grandmaHiker = GameObject.Find("GrannyHiker");
                 if (grandmaHiker)
                 {
-                    GameObject skeleton = grandmaHiker.transform.Find("Char/skeleton").gameObject;
+                    Transform skeletonTransform = grandmaHiker.transform.Find("Char/skeleton");
                     PlayMakerFSM logicFSM = grandmaHiker.GetPlayMaker("Logic");
 
-                    logicFSM.GetState("Open door").AddAction(new GrandmaHiker(skeleton, false));
-                    logicFSM.GetState("Set mass 2").AddAction(new GrandmaHiker(skeleton, true));
+                    if (skeletonTransform != null && logicFSM != null)
+                    {
+                        GameObject skeleton = skeletonTransform.gameObject;
+                        logicFSM.GetState("Open door")?.AddAction(new GrandmaHiker(skeleton, false));
+                        logicFSM.GetState("Set mass 2")?.AddAction(new GrandmaHiker(skeleton, true));
+                    }
                 }
             }
             catch (Exception ex)
@@ -362,7 +419,11 @@ namespace MOPR
                 {
                     Transform hatch = g.transform.Find("BoxHatch");
                     if (hatch)
-                        hatch.GetComponent<PlayMakerFSM>().Fsm.RestartOnEnable = false;
+                    {
+                        PlayMakerFSM hatchFsm = hatch.GetComponent<PlayMakerFSM>();
+                        if (hatchFsm != null)
+                            hatchFsm.Fsm.RestartOnEnable = false;
+                    }
                 }
             }
             catch (Exception ex)
